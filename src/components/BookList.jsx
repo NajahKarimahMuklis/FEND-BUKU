@@ -2,10 +2,29 @@ import React, { useState } from "react";
 import { deleteBook } from "../services/api";
 import BookCard from "./BookCard";
 
-const BookList = ({ books, statusOptions, onEditBook, onDeleteBook, onError }) => {
+// Define the Role enum to match Prisma schema
+const Role = {
+  USER: "USER",
+  ADMIN: "ADMIN",
+};
+
+const BookList = ({
+  books,
+  statusOptions,
+  onEditBook,
+  onDeleteBook,
+  onError,
+  userRole,
+}) => {
   const [deletingId, setDeletingId] = useState(null);
 
   const handleDeleteBook = async (bukuId) => {
+    // Only allow admins to delete books
+    if (userRole !== Role.ADMIN) {
+      onError("Unauthorized: Only admins can delete books");
+      return;
+    }
+
     setDeletingId(bukuId);
     try {
       await deleteBook(bukuId);
@@ -33,9 +52,10 @@ const BookList = ({ books, statusOptions, onEditBook, onDeleteBook, onError }) =
           key={book.id}
           book={book}
           statusOptions={statusOptions}
-          onEdit={() => onEditBook(book)}
+          onEdit={() => (userRole === Role.ADMIN ? onEditBook(book) : null)}
           onDelete={() => handleDeleteBook(book.id)}
           isDeleting={deletingId === book.id}
+          userRole={userRole}
         />
       ))}
     </div>

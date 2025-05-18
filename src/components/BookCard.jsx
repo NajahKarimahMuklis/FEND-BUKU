@@ -1,6 +1,19 @@
 import React from "react";
 
-const BookCard = ({ book, statusOptions, onEdit, onDelete, isDeleting }) => {
+// Define the Role enum to match Prisma schema
+const Role = {
+  USER: "USER",
+  ADMIN: "ADMIN",
+};
+
+const BookCard = ({
+  book,
+  statusOptions,
+  onEdit,
+  onDelete,
+  isDeleting,
+  userRole,
+}) => {
   const statusName =
     book.statusBuku?.nama ||
     statusOptions.find((s) => s.id === book.statusBukuId)?.nama ||
@@ -24,22 +37,24 @@ const BookCard = ({ book, statusOptions, onEdit, onDelete, isDeleting }) => {
         </p>
       </div>
 
-      <div className="mt-4 flex justify-between">
-        <button
-          onClick={onEdit}
-          className="text-blue-500 hover:text-blue-600"
-          disabled={isDeleting}
-        >
-          Edit
-        </button>
-        <button
-          onClick={onDelete}
-          className="text-red-500 hover:text-red-600"
-          disabled={isDeleting}
-        >
-          {isDeleting ? "Deleting..." : "Delete"}
-        </button>
-      </div>
+      {userRole === Role.ADMIN && (
+        <div className="mt-4 flex justify-between">
+          <button
+            onClick={onEdit}
+            className="text-blue-500 hover:text-blue-600"
+            disabled={isDeleting}
+          >
+            Edit
+          </button>
+          <button
+            onClick={onDelete}
+            className="text-red-500 hover:text-red-600"
+            disabled={isDeleting}
+          >
+            {isDeleting ? "Deleting..." : "Delete"}
+          </button>
+        </div>
+      )}
     </div>
   );
 };

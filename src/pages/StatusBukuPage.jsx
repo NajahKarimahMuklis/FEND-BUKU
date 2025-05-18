@@ -9,23 +9,11 @@ const StatusBukuPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const getTokenFromCookies = () => {
-    const token = document.cookie
-      .split("; ")
-      .find((row) => row.startsWith("token="))
-      ?.split("=")[1];
-    return token;
-  };
-
   const fetchStatus = async () => {
     setLoading(true);
-    const token = getTokenFromCookies();
-
     try {
       const response = await fetch("http://localhost:3000/statusBuku", {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
+        credentials: "include",
       });
       const data = await response.json();
       if (response.ok) {
@@ -48,7 +36,6 @@ const StatusBukuPage = () => {
   const handleAddStatus = async (e) => {
     e.preventDefault();
     setLoading(true);
-    const token = getTokenFromCookies();
 
     if (!newStatus.trim()) {
       setError("Nama status wajib diisi.");
@@ -61,8 +48,7 @@ const StatusBukuPage = () => {
         method: "POST",
         credentials: "include",
         headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
+          "Content-Type": "application/json"
         },
         body: JSON.stringify({ nama: newStatus })
       });
@@ -87,15 +73,10 @@ const StatusBukuPage = () => {
     if (!confirmDelete) return;
 
     setLoading(true);
-    const token = getTokenFromCookies();
-
     try {
       const response = await fetch(`http://localhost:3000/statusBuku/${id}`, {
         method: "DELETE",
         credentials: "include",
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
       });
 
       const data = await response.json();
@@ -120,7 +101,6 @@ const StatusBukuPage = () => {
   const handleUpdateStatus = async (e) => {
     e.preventDefault();
     setLoading(true);
-    const token = getTokenFromCookies();
 
     if (!editNama.trim()) {
       setError("Nama status tidak boleh kosong.");
@@ -135,8 +115,7 @@ const StatusBukuPage = () => {
           method: "PUT",
           credentials: "include",
           headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`
+            "Content-Type": "application/json"
           },
           body: JSON.stringify({ nama: editNama })
         }
@@ -165,14 +144,12 @@ const StatusBukuPage = () => {
         <h1 className="text-3xl font-bold text-emerald-500 mb-6">
           Status Buku
         </h1>
-        {/* Error Message */}
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
             {error}
           </div>
         )}
 
-        {/* Form Tambah Status */}
         <div className="bg-gray-100 p-6 rounded-lg mb-6">
           <h2 className="text-xl font-semibold mb-4">Tambah Status Buku</h2>
           <form onSubmit={handleAddStatus} className="space-y-4">
@@ -194,7 +171,6 @@ const StatusBukuPage = () => {
           </form>
         </div>
 
-        {/* Daftar Status Buku */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {statusList.map((status) => (
             <div

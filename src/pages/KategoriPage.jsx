@@ -10,25 +10,12 @@ const KategoriPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const getTokenFromCookies = () => {
-    const token = document.cookie
-      .split("; ")
-      .find((row) => row.startsWith("token="))
-      ?.split("=")[1];
-    return token;
-  };
-
   const fetchKategori = async () => {
     setLoading(true);
-    const token = getTokenFromCookies();
-
     try {
       const response = await fetch("http://localhost:3000/kategori", {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
+        credentials: "include",
       });
-
       const data = await response.json();
 
       if (response.ok) {
@@ -51,7 +38,6 @@ const KategoriPage = () => {
   const handleAddKategori = async (e) => {
     e.preventDefault();
     setLoading(true);
-    const token = getTokenFromCookies();
 
     if (!newKategori.trim()) {
       setError("Nama kategori wajib diisi.");
@@ -65,9 +51,8 @@ const KategoriPage = () => {
         credentials: "include",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify({ nama: newKategori })
+        body: JSON.stringify({ nama: newKategori }),
       });
 
       const data = await response.json();
@@ -90,15 +75,10 @@ const KategoriPage = () => {
     if (!confirmDelete) return;
 
     setLoading(true);
-    const token = getTokenFromCookies();
-
     try {
       const response = await fetch(`http://localhost:3000/kategori/${id}`, {
         method: "DELETE",
-       credentials: "include",
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
+        credentials: "include",
       });
 
       const data = await response.json();
@@ -123,7 +103,6 @@ const KategoriPage = () => {
   const handleUpdateKategori = async (e) => {
     e.preventDefault();
     setLoading(true);
-    const token = getTokenFromCookies();
 
     if (!editNama.trim()) {
       setError("Nama kategori tidak boleh kosong.");
@@ -139,9 +118,8 @@ const KategoriPage = () => {
           credentials: "include",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`
           },
-          body: JSON.stringify({ nama: editNama })
+          body: JSON.stringify({ nama: editNama }),
         }
       );
 
@@ -169,14 +147,12 @@ const KategoriPage = () => {
           Kategori Buku
         </h1>
 
-        {/* Error Message */}
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
             {error}
           </div>
         )}
 
-        {/* Form Tambah Kategori */}
         <div className="bg-gray-100 p-6 rounded-lg mb-6">
           <h2 className="text-xl font-semibold mb-4">Tambah Kategori</h2>
           <form onSubmit={handleAddKategori} className="space-y-4">
@@ -198,7 +174,6 @@ const KategoriPage = () => {
           </form>
         </div>
 
-        {/* Daftar Kategori */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {kategoriList.map((kategori) => (
             <div

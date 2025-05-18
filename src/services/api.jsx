@@ -115,10 +115,19 @@ export const updateBook = async (bookId, bookData) => {
 
     console.log("Update book response status:", response.status);
 
-    const data = await response.json();
+    let data;
+    try {
+      data = await response.json();
+    } catch {
+      throw new Error("Response tidak valid JSON");
+    }
+
     console.log("Update book response data:", data);
 
     if (response.ok) {
+      if (!data || !data.data) {
+        throw new Error("Response tidak memiliki data buku");
+      }
       return data.data;
     } else {
       throw new Error(data.message || "Terjadi kesalahan saat mengupdate buku");
@@ -128,6 +137,7 @@ export const updateBook = async (bookId, bookData) => {
     throw err;
   }
 };
+
 
 export const deleteBook = async (bukuId) => {
   try {

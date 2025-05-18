@@ -1,33 +1,38 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom"; // Import useNavigate
+import { useNavigate } from "react-router-dom";
 
 export default function Register() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [role, setRole] = useState("USER");
+  const [adminSecret, setAdminSecret] = useState("");
   const [message, setMessage] = useState("");
-  const navigate = useNavigate(); // Hook untuk navigasi
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    const bodyData = { name, email, password, role };
+    if (role === "ADMIN") {
+      bodyData.adminSecret = adminSecret;
+    }
+
     try {
       const res = await fetch("http://localhost:3000/register", {
         method: "POST",
-        credentials: "include", // Sertakan kredensial untuk cookies
+        credentials: "include",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify(bodyData),
       });
 
       const data = await res.json();
 
       if (res.ok) {
         setMessage(data.message);
-
-        // Jika registrasi berhasil, arahkan ke halaman login
-        navigate("/login"); // Menggunakan navigate untuk berpindah halaman login
+        navigate("/login");
       } else {
         setMessage(data.message || "Registrasi gagal");
       }
@@ -59,7 +64,7 @@ export default function Register() {
           <label className="block text-sm font-medium mb-1">Full Name</label>
           <input
             type="text"
-            className="w-full border rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="w-full border rounded-md p-2"
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
@@ -70,7 +75,7 @@ export default function Register() {
           <label className="block text-sm font-medium mb-1">Email</label>
           <input
             type="email"
-            className="w-full border rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="w-full border rounded-md p-2"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
@@ -81,12 +86,39 @@ export default function Register() {
           <label className="block text-sm font-medium mb-1">Password</label>
           <input
             type="password"
-            className="w-full border rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="w-full border rounded-md p-2"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
           />
         </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">Role</label>
+          <select
+            className="w-full border rounded-md p-2"
+            value={role}
+            onChange={(e) => setRole(e.target.value)}
+          >
+            <option value="USER">User</option>
+            <option value="ADMIN">Admin</option>
+          </select>
+        </div>
+
+        {role === "ADMIN" && (
+          <div>
+            <label className="block text-sm font-medium mb-1">
+              Admin Secret
+            </label>
+            <input
+              type="text"
+              className="w-full border rounded-md p-2"
+              value={adminSecret}
+              onChange={(e) => setAdminSecret(e.target.value)}
+              required
+            />
+          </div>
+        )}
 
         <button
           type="submit"

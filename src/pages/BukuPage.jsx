@@ -14,6 +14,17 @@ const BukuPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [editBook, setEditBook] = useState(null);
+  const [userRole, setUserRole] = useState("");
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      const parsedUser = JSON.parse(storedUser);
+      // Handle role directly as it should be a string enum from Prisma
+      // No need for mapping since the backend is sending the correct enum values
+      setUserRole(parsedUser.role);
+    }
+  }, []);
 
   useEffect(() => {
     loadBooks();
@@ -92,25 +103,27 @@ const BukuPage = () => {
 
       {/* Main Content */}
       <div className="container mx-auto p-6 flex-grow">
-        <h2 className="text-3xl font-bold text-blue-600 mb-6">
-          Book Collection
-        </h2>
-
         {/* Error Message */}
         {error && <ErrorMessage message={error} />}
 
-        {/* Form to Add or Edit Book */}
-        <BookForm
-          editBook={editBook}
-          setEditBook={setEditBook}
-          statusOptions={statusOptions}
-          onBookAdded={handleBookAdded}
-          onBookUpdated={handleBookUpdated}
-          onError={handleError}
-        />
-        <h2 className="underline text-blue-600 pl-6 mb-6 hover:text-blue-800 cursor-pointer">
-          <Link to="/bukuKategori">Tambahkan kategori dari buku disini!</Link>
-        </h2>
+        {/* Form to Add or Edit Book - Only visible to ADMIN */}
+        {userRole === "ADMIN" && (
+          <BookForm
+            editBook={editBook}
+            setEditBook={setEditBook}
+            statusOptions={statusOptions}
+            onBookAdded={handleBookAdded}
+            onBookUpdated={handleBookUpdated}
+            onError={handleError}
+          />
+        )}
+
+        {/* Link to Category Management - Only visible to ADMIN */}
+        {userRole === "ADMIN" && (
+          <h2 className="underline text-blue-600 pl-6 mb-6 hover:text-blue-800 cursor-pointer">
+            <Link to="/bukuKategori">Tambahkan kategori dari buku disini!</Link>
+          </h2>
+        )}
 
         <h2 className="pl-6 text-3xl">Daftar Buku</h2>
 
@@ -124,6 +137,7 @@ const BukuPage = () => {
             onEditBook={setEditBook}
             onDeleteBook={handleBookDeleted}
             onError={handleError}
+            userRole={userRole}
           />
         )}
       </div>

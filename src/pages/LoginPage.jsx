@@ -1,4 +1,5 @@
-import React from "react";
+import bgImage from "../assets/bg-login.png";
+import booknest from "/booknest.png"
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
@@ -41,89 +42,103 @@ function LoginPage() {
   };
 
   return (
-    <div className="flex h-screen">
+    <div className="relative overflow-hidden h-screen">
       {/* Kiri - Welcome Section */}
-      <div className="w-1/2 bg-blue-500 flex flex-col justify-center items-center text-white p-8">
-        <h1 className="text-4xl font-bold mb-4">
-          Welcome to
-          <br />
-          BookNest
-        </h1>
-        <p className="text-lg mb-8 text-center">
-          Manage your book collection, track reading progress, categorize books,
-          and more.
-        </p>
-        <div className="flex items-center justify-center">
-          {/* Gambar Buku (Placeholder) */}
-          <div className="w-40 h-40 bg-green-300 rounded-md"></div>
+      <img
+        src={bgImage}
+        alt="Background"
+        className="absolute bottom-0 left-0 w-full h-auto object-cover -z-10"
+        style={{ maxHeight: "100%" }}
+      />
+      <div className="flex">
+        <div className="w-1/2 flex flex-col justify-start mt-30 ml-10 text-white p-8">
+          <h1 className="text-7xl font-bold mb-4">Selamat Datang Di</h1>
+          <p className="text-5xl font-bold mb-4">BookNest</p>
+          <p className="text-lg mb-8 ">Jelajahi buku yang ingin anda cari!</p>
+          <div className="flex items-center justify-center">
+            {/* Gambar Buku (Placeholder) */}
+          </div>
         </div>
-      </div>
 
-      {/* Kanan - Login Form */}
-      <div className="w-1/2 flex flex-col justify-center items-center p-8">
-        <form className="w-80" onSubmit={handleSubmit}>
-          {message && (
-            <div className="mb-4 text-center text-red-500">{message}</div>
-          )}
-          <div className="mb-4">
-            <label className="block text-gray-700 mb-2" htmlFor="email">
-              Email address
-            </label>
-            <input
-              className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              type="email"
-              id="email"
-              placeholder="name@gmail.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
-          <div className="mb-4">
-            <label className="block text-gray-700 mb-2" htmlFor="password">
-              Password
-            </label>
-            <input
-              className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              type="password"
-              id="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center">
-              <input type="checkbox" id="remember" className="mr-2" />
-              <label htmlFor="remember" className="text-sm text-gray-700">
-                Remember me
+        {/* Kanan - Login Form */}
+        <div className="w-1/2 flex flex-col justify-center items-center p-20 ">
+          <img src={booknest} className="mb-20"></img>
+          <form
+            className="w-150 inset-shadow-orange-700 rounded-xl p-10 shadow-xl/30 border-orange-200 backdrop-blur-xl"
+            onSubmit={handleSubmit}
+          >
+            {message && (
+              <div className="mb-4 text-center text-red-500">{message}</div>
+            )}
+            <h1 className="text-4xl flex justify-center mb-10">Masuk</h1>
+            <div className="mb-4 w-95 ml-17">
+              <label
+                className="text-xl block text-gray-900 mb-2"
+                htmlFor="email"
+              >
+                Email
               </label>
+              <input
+                className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-black"
+                type="email"
+                id="email"
+                placeholder="nama@gmail.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
             </div>
-            <a href="#" className="text-sm text-blue-500 hover:underline">
-              Forgot password?
-            </a>
-          </div>
-          <div className="flex gap-4">
-            <button
-              type="submit"
-              className="w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600 transition"
-            >
-              Login
-            </button>
-          </div>
-          <h2 className="mt-5 block text-gray-700 mb-2">
-            Don't have an account?
-          </h2>
-          <Link to="/register">
-            <button
-              type="button"
-              className="w-full mt border border-blue-500 text-blue-500 py-2 rounded-md hover:bg-blue-50 transition"
-            >
-              Sign up
-            </button>
-          </Link>
-        </form>
+            <div className="mb-4  w-95 ml-17">
+              <label
+                className="text-xl block text-gray-900 mb-2"
+                htmlFor="password"
+              >
+                Kata Sandi
+              </label>
+              <input
+                className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-black"
+                type="password"
+                id="password"
+                placeholder="Kata Sandi"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </div>
+            <div className="flex items-center w-95 ml-17 justify-between mb-6">
+              <div className="flex items-center  ">
+                <input type="checkbox" id="remember" className="mr-2" />
+                <label htmlFor="remember" className="text-md text-gray-700">
+                  Ingat Saya
+                </label>
+              </div>
+              <a href="#" className="text-sm text-blue-500 hover:underline">
+                Lupa Kata Sandi?
+              </a>
+            </div>
+            <div className="flex justify-center gap-4">
+              <button
+                type="submit"
+                className="w-40 bg-emerald-800 text-white py-2 rounded-md hover:bg-emerald-600 transition"
+              >
+                Masuk
+              </button>
+            </div>
+            <h2 className="flex justify-center mt-5 block text-gray-700 mb-2">
+              Belum Punya Akun?
+            </h2>
+            <div className="flex justify-center">
+              <Link to="/register">
+                <button
+                  type="button"
+                  className="w-40 text-emerald-900 border border-emerald-800 text-emerald-900 py-2 rounded-md hover:bg-emerald-700 transition"
+                >
+                  Daftar
+                </button>
+              </Link>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );

@@ -5,11 +5,6 @@ function LandingPageAdmin() {
   const [adminName, setAdminName] = useState("Admin");
   const navigate = useNavigate();
 
-  useEffect(() => {
-    // Cek autentikasi di sini jika diperlukan
-    // fetch data admin dari token misalnya
-  }, []);
-
   const handleLogout = () => {
     document.cookie = "token=; Max-Age=0; path=/;";
     navigate("/login");

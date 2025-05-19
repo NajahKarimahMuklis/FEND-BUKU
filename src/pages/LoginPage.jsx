@@ -164,7 +164,7 @@ function LoginPage() {
               </button>
             </div>
 
-            <h2 className="flex justify-center mt-5 block text-gray-700 mb-2">
+            <h2 className="flex justify-center mt-5  text-gray-700 mb-2">
               Belum Punya Akun?
             </h2>
 

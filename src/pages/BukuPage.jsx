@@ -14,35 +14,21 @@ const BukuPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [editBook, setEditBook] = useState(null);
-  const [userRole, setUserRole] = useState("");
 
+  // Hardcode userRole di sini, atau bisa nanti diganti props/context
+  const [userRole, setUserRole] = useState(""); // kosong = guest
+
+  // Contoh assign role langsung, misal "ADMIN" atau "USER"
+  // Kamu bisa ganti logika ini sesuai kebutuhan autentikasi
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      const parsedUser = JSON.parse(storedUser);
-      // Handle role directly as it should be a string enum from Prisma
-      // No need for mapping since the backend is sending the correct enum values
-      setUserRole(parsedUser.role);
-    }
+    // Contoh set role admin langsung (untuk testing)
+    setUserRole("ADMIN"); 
   }, []);
 
   useEffect(() => {
     loadBooks();
     loadStatusOptions();
-
-    return () => {
-      if (books.length > 0) {
-        sessionStorage.setItem("booksData", JSON.stringify(books));
-      }
-    };
   }, []);
-
-  useEffect(() => {
-    const storedBooks = sessionStorage.getItem("booksData");
-    if (storedBooks && books.length === 0) {
-      setBooks(JSON.parse(storedBooks));
-    }
-  }, [location.pathname]);
 
   const loadBooks = async () => {
     setLoading(true);
@@ -51,7 +37,6 @@ const BukuPage = () => {
       setBooks(data);
       setError("");
     } catch (err) {
-      console.error("Error fetching books:", err);
       setError("Gagal terhubung ke server: " + err.message);
     } finally {
       setLoading(false);
@@ -63,33 +48,25 @@ const BukuPage = () => {
       const options = await fetchStatusOptions();
       setStatusOptions(options);
     } catch (err) {
-      console.error("Error fetching status options:", err);
-      const storedStatusOptions = sessionStorage.getItem("statusOptions");
-      if (storedStatusOptions) {
-        setStatusOptions(JSON.parse(storedStatusOptions));
-      }
+      setError("Gagal memuat status opsi");
     }
   };
 
   const handleBookAdded = (newBookWithStatus) => {
-    const updatedBooks = [...books, newBookWithStatus];
-    setBooks(updatedBooks);
-    sessionStorage.setItem("booksData", JSON.stringify(updatedBooks));
+    setBooks((prev) => [...prev, newBookWithStatus]);
   };
 
   const handleBookUpdated = (updatedBookWithStatus) => {
-    const updatedBooks = books.map((book) =>
-      book.id === updatedBookWithStatus.id ? updatedBookWithStatus : book
+    setBooks((prev) =>
+      prev.map((book) =>
+        book.id === updatedBookWithStatus.id ? updatedBookWithStatus : book
+      )
     );
-    setBooks(updatedBooks);
-    sessionStorage.setItem("booksData", JSON.stringify(updatedBooks));
     setEditBook(null);
   };
 
   const handleBookDeleted = (bukuId) => {
-    const filteredBooks = books.filter((book) => book.id !== bukuId);
-    setBooks(filteredBooks);
-    sessionStorage.setItem("booksData", JSON.stringify(filteredBooks));
+    setBooks((prev) => prev.filter((book) => book.id !== bukuId));
   };
 
   const handleError = (errorMessage) => {
@@ -98,15 +75,11 @@ const BukuPage = () => {
 
   return (
     <div className="flex flex-col min-h-screen">
-      {/* Navigation Bar */}
       <Navbar />
 
-      {/* Main Content */}
       <div className="container mx-auto p-6 flex-grow">
-        {/* Error Message */}
         {error && <ErrorMessage message={error} />}
 
-        {/* Form to Add or Edit Book - Only visible to ADMIN */}
         {userRole === "ADMIN" && (
           <BookForm
             editBook={editBook}
@@ -118,16 +91,14 @@ const BukuPage = () => {
           />
         )}
 
-        {/* Link to Category Management - Only visible to ADMIN */}
         {userRole === "ADMIN" && (
           <h2 className="underline text-blue-600 pl-6 mb-6 hover:text-blue-800 cursor-pointer">
             <Link to="/bukuKategori">Tambahkan kategori dari buku disini!</Link>
           </h2>
         )}
 
-        <h2 className="pl-6 text-3xl">Daftar Buku</h2>
+        <h2 className="pl-6 text-3xl mb-4">Daftar Buku</h2>
 
-        {/* Books List */}
         {loading && !editBook ? (
           <LoadingSpinner />
         ) : (

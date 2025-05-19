@@ -1,5 +1,4 @@
 import bgImage from "../assets/bg-login.png";
-import booknest from "/booknest.png";
 import logo from "/logo.png";
 import { motion } from "framer-motion";
 import { useState } from "react";
@@ -19,9 +18,9 @@ function LoginPage() {
         method: "POST",
         credentials: "include",
         headers: {
-          "Content-Type": "application/json",
+          "Content-Type": "application/json"
         },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password })
       });
 
       const data = await res.json();
@@ -30,9 +29,13 @@ function LoginPage() {
         setMessage(data.message);
         document.cookie = `token=${data.token}; path=/; max-age=3600`;
         console.log("Token disimpan:", document.cookie);
-        navigate("/buku");
-      } else {
-        setMessage(data.message || "Login gagal");
+
+        const role = data.data.role;
+        if (role === "ADMIN") {
+          navigate("/admin/dashboard");
+        } else {
+          navigate("/user/home");
+        }
       }
     } catch (error) {
       console.error("Error:", error);
@@ -48,7 +51,7 @@ function LoginPage() {
         alt="Background"
         className="absolute w-full h-full object-cover -z-10"
         style={{
-          objectPosition: "center right",
+          objectPosition: "center right"
         }}
       ></img>
 

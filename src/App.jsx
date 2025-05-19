@@ -6,8 +6,8 @@ import UserPage from "./pages/UserPage";
 import StatusBukuPage from "./pages/StatusBukuPage";
 import KategoriPage from "./pages/KategoriPage";
 import BukuKategoriPage from "./pages/BukuKategoriPage";
-
-
+import LandingPageAdmin from "./pages/LandingPageAdmin";
+import LandingPageUser from "./pages/LandingPageUser";
 function App() {
   return (
     <Router>
@@ -20,6 +20,8 @@ function App() {
         <Route path="/user" element={<UserPage />} />
         <Route path="/statusBuku" element={<StatusBukuPage />} />
         <Route path="/bukuKategori" element={<BukuKategoriPage />} />
+        <Route path="/admin/dashboard" element={<LandingPageAdmin />} />
+        <Route path="/user/home" element={<LandingPageUser />} />
       </Routes>
     </Router>
   );

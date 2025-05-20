@@ -128,12 +128,12 @@ export default function Register() {
             <div>
               <label className="block text-sm font-medium mb-1">Role</label>
               <select
-                className="w-full border rounded-md p-2"
+                className="w-full border rounded-md p-2 text-white"
                 value={role}
                 onChange={(e) => setRole(e.target.value)}
               >
-                <option value="USER">User</option>
-                <option value="ADMIN">Admin</option>
+                <option className="text-black" value="USER">User</option>
+                <option className="text-black" value="ADMIN">Admin</option>
               </select>
             </div>
 
@@ -154,7 +154,7 @@ export default function Register() {
 
             <button
               type="submit"
-              className="w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600 transition"
+              className="w-full mt-10  bg-emerald-500 text-white py-2 rounded-md hover:bg-emerald-600 transition"
             >
               Register
             </button>

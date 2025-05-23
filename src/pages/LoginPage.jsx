@@ -44,7 +44,7 @@ function LoginPage() {
   };
 
   return (
-    <div className="relative overflow-hidden min-h-screen">
+    <div className="relative overflow-hidden min-h-screen raleway-general">
   <img
     src={bgImage}
     alt="Background"
@@ -58,10 +58,10 @@ function LoginPage() {
       initial={{ opacity: 0, x: -50 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.6, ease: "easeOut" }}
-      className="hidden sm:flex w-full lg:w-1/2 flex-col justify-center p-6 md:p-12 lg:pl-20 text-white"
+      className="hidden sm:flex w-full lg:w-1/2 flex-col justify-center p-6 md:p-12 xl:mb-[600px] lg:pl-20 text-white"
     >
       <h1 className="text-3xl md:text-4xl font-bold mb-2">Selamat Datang di</h1>
-      <p className="text-4xl md:text-6xl lg:text-7xl font-bold mb-4">BookNest</p>
+      <p className="text-4xl md:text-8xl lg:text-10xl font-bold mb-4">BookNest</p>
       <p className="text-lg md:text-xl text-orange-100">
         Cari dan jelajahi berbagai buku yang ingin Anda temukan!
       </p>
@@ -86,16 +86,16 @@ function LoginPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
         onSubmit={handleSubmit}
-        className="w-full max-w-sm md:max-w-md lg:max-w-lg rounded-xl p-6 sm:p-8 lg:p-10 shadow-lg border border-gray-200 backdrop-blur-xl bg-white/70"
+        className="w-full max-w-sm md:max-w-md lg:max-w-lg rounded-xl p-6 sm:p-8 lg:p-10 shadow-md backdrop-blur-xl bg-orange-900/10"
       >
         {message && (
           <div className="mb-4 text-center text-red-500">{message}</div>
         )}
 
-        <h1 className="text-2xl font-semibold text-center mb-6">Masuk</h1>
+        <h1 className="text-3xl font-semibold text-center mb-6">Masuk</h1>
 
         <div className="mb-4">
-          <label htmlFor="email" className="block text-gray-900 text-sm font-medium mb-2">
+          <label htmlFor="email" className="block text-gray-900 text-md font-medium mb-2">
             Email
           </label>
           <input
@@ -110,7 +110,7 @@ function LoginPage() {
         </div>
 
         <div className="mb-4">
-          <label htmlFor="password" className="block text-gray-900 text-sm font-medium mb-2">
+          <label htmlFor="password" className="block text-gray-900 text-md font-medium mb-2">
             Kata Sandi
           </label>
           <input
@@ -143,11 +143,11 @@ function LoginPage() {
 
         <p className="text-center text-sm text-gray-700 mb-2">Belum Punya Akun?</p>
 
-        <div className="flex justify-center">
+        <div className="flex justify-center mb-4">
           <Link to="/register">
             <button
               type="button"
-              className="w-full sm:w-40 text-emerald-900 border border-emerald-800 py-2 rounded-md hover:bg-emerald-700 hover:text-white transition text-lg"
+              className="w-full sm:w-40 text-emerald-900 border border-emerald-800 py-2 rounded-md hover:bg-emerald-700 hover:text-white transition text-lg "
             >
               Daftar
             </button>

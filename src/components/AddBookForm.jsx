@@ -69,7 +69,7 @@ function AddBookForm({ onSuccess }) {
       {/* Ilustrasi Kiri */}
       <div className="hidden md:flex items-center justify-center w-1/2">
         <img
-          src="/rbooks.svg" // ganti dengan ilustrasi lokal kamu
+          src="/rbooks.svg" 
           alt="Buku"
           className="w-80 drop-shadow-2xl"
         />

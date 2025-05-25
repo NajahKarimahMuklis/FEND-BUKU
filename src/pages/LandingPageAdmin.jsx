@@ -1,11 +1,19 @@
-import { useNavigate, Link } from "react-router";
-import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
+import {
+  FaBook,
+  FaFolder,
+  FaHome,
+  FaNeuter,
+  FaUserFriends
+} from "react-icons/fa";
+import { useNavigate } from "react-router";
 import AddBookForm from "../components/AddBookForm";
+import AddKategoriForm from "../components/AddKategoriForm";
+import AddStatusFrom from "../components/AddStatusForm";
 
 function LandingPageAdmin() {
   const [adminName, setAdminName] = useState("");
-  const [showForm, setShowForm] = useState(false);
   const [active, setActive] = useState("dashboard");
   const [buku, setBuku] = useState([]);
   const [statusBuku, setStatusBuku] = useState([]);
@@ -110,34 +118,49 @@ function LandingPageAdmin() {
             <button
               onClick={() => setActive("dashboard")}
               className={`text-left p-2 hover:bg-emerald-700 rounded ${
-                active === "dashboard" ? "bg-emerald-700" : ""
+                active === "dashboard" ? "bg-emerald-600" : ""
               }`}
             >
-              🏠 Dashboard
+              <div>
+                <FaHome className="inline-block mr-2 text-yellow-400 " />
+                Dashboard
+              </div>
             </button>
             <button
               onClick={() => setActive("buku")}
               className={`text-left p-2 hover:bg-emerald-700 rounded ${
-                active === "buku" ? "bg-emerald-700" : ""
+                active === "buku" ? "bg-emerald-600" : ""
               }`}
             >
-              📚 Kelola Buku
+              <FaBook className="inline-block mr-2 text-blue-300" />
+              Kelola Buku
             </button>
             <button
               onClick={() => setActive("kategori")}
               className={`text-left p-2 hover:bg-emerald-700 rounded ${
-                active === "kategori" ? "bg-emerald-700" : ""
+                active === "kategori" ? "bg-emerald-600" : ""
               }`}
             >
-              🗂️ Kelola Kategori
+              <FaFolder className="inline-block mr-2 text-orange-400" />
+              Kelola Kategori
             </button>
             <button
               onClick={() => setActive("statusBuku")}
               className={`text-left p-2 hover:bg-emerald-700 rounded ${
-                active === "statusBuku" ? "bg-emerald-700" : ""
+                active === "statusBuku" ? "bg-emerald-600" : ""
               }`}
             >
-              📌 Kelola Status Buku
+              <FaNeuter className="inline-block mr-2 text-yellow-400" />
+              Kelola Status Buku
+            </button>
+            <button
+              onClick={() => setActive("BukuKategori")}
+              className={`text-left p-2 hover:bg-emerald-700 rounded ${
+                active === "BukuKategori" ? "bg-emerald-600" : ""
+              }`}
+            >
+              <FaUserFriends className="inline-block mr-2 text-blue-600" />{" "}
+              Kelola Buku Kategori
             </button>
           </nav>
         </div>
@@ -358,6 +381,27 @@ function LandingPageAdmin() {
             className="p-6"
           >
             <AddBookForm onSuccess={() => console.log("Form sukses")} />
+          </motion.div>
+        )}
+
+        {active === "kategori" && (
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="p-6"
+          >
+            <AddKategoriForm />
+          </motion.div>
+        )}
+        {active === "statusBuku" && (
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="p-6"
+          >
+            <AddStatusFrom />
           </motion.div>
         )}
       </div>

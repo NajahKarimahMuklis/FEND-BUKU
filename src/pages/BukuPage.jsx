@@ -43,13 +43,11 @@ const BukuPage = () => {
     }
   };
 
-/*************  ✨ Windsurf Command ⭐  *************/
   /**
    * Loads status options from the server and updates the state.
    * If fetching fails, sets an error message.
    */
 
-/*******  9cddfb5b-ecc1-4347-9e02-37c86549d8e1  *******/
   const loadStatusOptions = async () => {
     try {
       const options = await fetchStatusOptions();

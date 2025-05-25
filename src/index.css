@@ -22,3 +22,7 @@
   font-weight: 500;
   font-style: normal;
 }
+
+.input-field {
+  @apply w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-gray-700;
+}

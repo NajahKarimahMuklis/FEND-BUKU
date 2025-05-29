@@ -3,7 +3,7 @@ import { FaBookOpen, FaTags } from "react-icons/fa";
 
 function AddBukuKatForm() {
   const [idBuku, setIdBuku] = useState("");
-  const [idKategori, setIdKategori] = useState("");
+  const [kategoriId, setKategoriId] = useState("");
   const [bukuList, setBukuList] = useState([]);
   const [kategoriList, setKategoriList] = useState([]);
   const [sukses, setSukses] = useState(false);
@@ -39,7 +39,7 @@ function AddBukuKatForm() {
         const data = await res.json();
         if (res.ok) {
           setKategoriList(data.data || []);
-          setIdKategori(data.data?.[0]?.id || "");
+          setKategoriId(data.data?.[0]?.id || "");
         } else {
           console.error("Gagal mengambil kategori:", data.message);
         }
@@ -54,7 +54,7 @@ function AddBukuKatForm() {
     e.preventDefault();
     const bukuKategoriBaru = {
       idBuku: parseInt(idBuku),
-      idKategori: parseInt(idKategori)
+      kategoriId: parseInt(kategoriId)
     };
     try {
       const res = await fetch("http://localhost:3000/bukuKategori", {
@@ -67,7 +67,7 @@ function AddBukuKatForm() {
       if (res.ok) {
         alert("Buku kategori berhasil ditambahkan!");
         setIdBuku("");
-        setIdKategori("");
+        setKategoriId("");
         setSukses(true);
       } else {
         alert("Gagal: " + (data.message || JSON.stringify(data)));
@@ -116,8 +116,8 @@ function AddBukuKatForm() {
               Kategori
             </label>
             <select
-              value={idKategori}
-              onChange={(e) => setIdKategori(e.target.value)}
+              value={kategoriId}
+              onChange={(e) => setKategoriId(e.target.value)}
               required
               className="w-full border border-gray-300 rounded-md px-4 py-3 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500"
             >

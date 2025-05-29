@@ -1,5 +1,5 @@
 import bgImage from "../assets/bg-login.png";
-import logo from "/logo.png";
+import logo from "../assets/logo.png";
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -46,15 +46,14 @@ function LoginPage() {
   };
 
   return (
-    <div className="relative overflow-hidden min-h-screen raleway-general">
-      <img
+    <div className="relative overflow-hidden min-h-screen raleway-general"><img
         src={bgImage}
         alt="Background"
         className="absolute w-full h-full object-cover -z-10"
         style={{ objectPosition: "center right" }}
       />
 
-      <div className="flex flex-col lg:flex-row min-h-screen">
+      <div className="flex flex-col lg:flex-row min-h-screen ">
         {/* Left - Welcome Text */}
         <motion.div
           initial={{ opacity: 0, x: -50 }}

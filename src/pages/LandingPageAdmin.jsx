@@ -5,13 +5,14 @@ import {
   FaFolder,
   FaHome,
   FaNeuter,
-  FaUserFriends
+  FaUserFriends,
 } from "react-icons/fa";
 import { useNavigate } from "react-router";
 import AddBookForm from "../components/AddBookForm";
 import AddKategoriForm from "../components/AddKategoriForm";
 import AddStatusFrom from "../components/AddStatusForm";
 import AddBukuKatForm from "../components/AddBukuKatForm";
+import { div } from "framer-motion/client";
 
 function LandingPageAdmin() {
   const [adminName, setAdminName] = useState("");
@@ -19,6 +20,8 @@ function LandingPageAdmin() {
   const [buku, setBuku] = useState([]);
   const [statusBuku, setStatusBuku] = useState([]);
   const [kategori, setKategori] = useState([]);
+  const [bukuKategori, setBukuKategori] = useState([]);
+
   const [sudahAmbil, setSudahAmbil] = useState(false);
   const [tampilBuku, setTampilBuku] = useState(false);
   const [tampilStatus, setTampilStatus] = useState(false);
@@ -43,8 +46,8 @@ function LandingPageAdmin() {
           method: "GET",
           credentials: "include",
           headers: {
-            "Content-Type": "application/json"
-          }
+            "Content-Type": "application/json",
+          },
         });
 
         const data = await res.json();
@@ -68,8 +71,8 @@ function LandingPageAdmin() {
           method: "GET",
           credentials: "include",
           headers: {
-            "Content-Type": "application/json"
-          }
+            "Content-Type": "application/json",
+          },
         });
 
         const data = await res.json();
@@ -93,8 +96,8 @@ function LandingPageAdmin() {
           method: "GET",
           credentials: "include",
           headers: {
-            "Content-Type": "application/json"
-          }
+            "Content-Type": "application/json",
+          },
         });
 
         const data = await res.json();
@@ -110,8 +113,33 @@ function LandingPageAdmin() {
     }
   };
 
+  const handleKlikBukuKategori = async () => {
+    if (!sudahAmbil) {
+      try {
+        const res = await fetch("http://localhost:3000/bukukategori", {
+          method: "GET",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+          setBukuKategori(data.data);
+          console.log("Berhasil ambil buku kategori:", data.data);
+        } else {
+          console.error("Gagal ambil buku kategori:", data.message);
+        }
+      } catch (error) {
+        console.error("Error saat ambil buku kategori:", error);
+      }
+    }
+  };
+  
+
   return (
-    <div className="flex h-screen bg-gray-100">
+    <div className="flex h-screen bg-gray-100 raleway-general ">
       <div className="w-64 bg-emerald-900 text-white flex flex-col justify-between">
         <div>
           <h2 className="text-2xl font-bold p-6">BookNest Admin</h2>
@@ -200,7 +228,7 @@ function LandingPageAdmin() {
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            src="/public/welcome.svg"
+            src="/welcome.svg"
             alt="Welcome Illustration"
             className="w-28 h-auto hidden md:block"
           />
@@ -263,6 +291,27 @@ function LandingPageAdmin() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.2 }}
+                onClick={handleKlikBukuKategori}
+                className="bg-white/70 backdrop-blur-md border border-orange-200 shadow-lg p-6 rounded-2xl hover:shadow-xl transition-all cursor-pointer"
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <div className="text-4xl">📌</div>
+                  <span className="text-sm font-semibold bg-orange-100 text-rose-800 px-3 py-1 rounded-full">
+                    {statusBuku.length} status
+                  </span>
+                </div>
+                <h2 className="text-xl font-bold text-orange-800">
+                  Kelola Buku Kategori
+                </h2>
+                <p className="text-sm text-gray-600 mt-1">
+                  Lihat kategori dari berbagai buku.
+                </p>
+              </motion.div>
+              <motion.div
+                whileHover={{ scale: 1.03 }}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
                 onClick={handleStatusBuku}
                 className="bg-white/70 backdrop-blur-md border border-rose-200 shadow-lg p-6 rounded-2xl hover:shadow-xl transition-all cursor-pointer"
               >
@@ -296,7 +345,6 @@ function LandingPageAdmin() {
                       <h3 className="text-lg font-semibold text-gray-800 mb-2">
                         {status.nama}
                       </h3>
-                      <p className="text-sm text-gray-600">ID: {status.id}</p>
                     </motion.div>
                   ))}
                 </div>
@@ -339,6 +387,12 @@ function LandingPageAdmin() {
                             {book.statusBuku?.nama || "-"}
                           </dd>
                         </div>
+                        <div>
+                          <dt className="inline font-medium">Kategori:</dt>{" "}
+                          <dd className="inline  text-emerald-700 px-2 py-0.5 rounded text-xs">
+                            {book.kategori?.id || "-"}
+                          </dd>
+                        </div>
                       </dl>
                     </motion.div>
                   ))}
@@ -363,14 +417,13 @@ function LandingPageAdmin() {
                       <h3 className="text-lg font-semibold text-gray-800 mb-2">
                         {item.nama}
                       </h3>
-                      <p className="text-sm text-gray-600">
-                        {item.deskripsi || "Tanpa deskripsi."}
-                      </p>
                     </motion.div>
                   ))}
                 </div>
               </div>
             )}
+
+            
           </motion.div>
         )}
 
@@ -415,7 +468,7 @@ function LandingPageAdmin() {
           >
             <AddBukuKatForm />
           </motion.div>
-        )}  
+        )}
       </div>
     </div>
   );

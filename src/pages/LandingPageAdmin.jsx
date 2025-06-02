@@ -4,27 +4,26 @@ import {
   FaBook,
   FaFolder,
   FaHome,
-  FaNeuter,
+  FaSearch,
   FaUserFriends,
 } from "react-icons/fa";
 import { useNavigate } from "react-router";
 import AddBookForm from "../components/AddBookForm";
-import AddKategoriForm from "../components/AddKategoriForm";
-import AddStatusFrom from "../components/AddStatusForm";
 import AddBukuKatForm from "../components/AddBukuKatForm";
-import { div } from "framer-motion/client";
+import AddKategoriForm from "../components/AddKategoriForm";
 
 function LandingPageAdmin() {
   const [adminName, setAdminName] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [query, setQuery] = useState("");
   const [active, setActive] = useState("dashboard");
   const [buku, setBuku] = useState([]);
-  const [statusBuku, setStatusBuku] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [eksemplarBuku, setEksemplarBuku] = useState([]);
   const [kategori, setKategori] = useState([]);
-  const [bukuKategori, setBukuKategori] = useState([]);
-
+  const [filteredEksemplar, setFilteredEksemplar] = useState([]);
   const [sudahAmbil, setSudahAmbil] = useState(false);
   const [tampilBuku, setTampilBuku] = useState(false);
-  const [tampilStatus, setTampilStatus] = useState(false);
   const [tampilKategori, setTampilKategori] = useState(false);
   const navigate = useNavigate();
 
@@ -33,16 +32,68 @@ function LandingPageAdmin() {
     setAdminName(adminName);
   }, []);
 
+  const tableVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.05, // Sedikit jeda antar animasi baris
+      },
+    },
+  };
+
+  const rowVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.3,
+        ease: "easeOut",
+      },
+    },
+  };
+
   const handleLogout = () => {
     document.cookie = "token=; Max-Age=0; path=/;";
     navigate("/login");
   };
 
-  const handleKlikBook = async () => {
+  // Search eksemplar buku
+  useEffect(() => {
+    if (!query) {
+      setFilteredEksemplar(eksemplarBuku);
+    } else {
+      const hasil = eksemplarBuku.filter((item) => {
+        const q = query.toLowerCase();
+        return (
+          item.buku?.judul?.toLowerCase().includes(q) ||
+          item.buku?.pengarang?.toLowerCase().includes(q) ||
+          item.buku?.penerbit?.toLowerCase().includes(q) ||
+          item.buku?.tahunTerbit?.toString().includes(q) ||
+          item.kodeEksemplar?.toLowerCase().includes(q)
+        );
+      });
+      setFilteredEksemplar(hasil);
+    }
+  }, [query, eksemplarBuku]);
+
+  useEffect(() => {
+    if (!statusFilter) {
+      setFilteredEksemplar(eksemplarBuku);
+    } else {
+      const hasil = eksemplarBuku.filter(
+        (item) => item.status?.toLowerCase() === statusFilter.toLowerCase()
+      );
+      setFilteredEksemplar(hasil);
+    }
+  }, [statusFilter, eksemplarBuku]);
+
+  const handleKlikEksemplar = async () => {
     setTampilBuku((prev) => !prev);
     if (!sudahAmbil) {
       try {
-        const res = await fetch("http://localhost:3000/buku", {
+        const res = await fetch("http://localhost:3000/eksemplarBuku", {
           method: "GET",
           credentials: "include",
           headers: {
@@ -52,10 +103,10 @@ function LandingPageAdmin() {
 
         const data = await res.json();
         if (res.ok) {
-          setBuku(data.data);
-          console.log("Berhasil mengambil buku:", data);
+          setEksemplarBuku(data.data);
+          console.log("Berhasil mengambil eksemplar buku:", data);
         } else {
-          console.error("Gagal mendapatkan buku:", data.message);
+          console.error("Gagal mendapatkan eksemplar buku:", data.message);
         }
       } catch (error) {
         console.error("Error fetching books:", error);
@@ -88,58 +139,8 @@ function LandingPageAdmin() {
     }
   };
 
-  const handleStatusBuku = async () => {
-    setTampilStatus((prev) => !prev);
-    if (!sudahAmbil) {
-      try {
-        const res = await fetch("http://localhost:3000/statusBuku", {
-          method: "GET",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
-
-        const data = await res.json();
-        if (res.ok) {
-          setStatusBuku(data.data);
-          console.log("Berhasil mengambil status buku:", data);
-        } else {
-          console.error("Gagal mendapatkan status buku:", data.message);
-        }
-      } catch (error) {
-        console.error("Error fetching book statuses:", error);
-      }
-    }
-  };
-
-  const handleKlikBukuKategori = async () => {
-    if (!sudahAmbil) {
-      try {
-        const res = await fetch("http://localhost:3000/bukukategori", {
-          method: "GET",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
-
-        const data = await res.json();
-        if (res.ok) {
-          setBukuKategori(data.data);
-          console.log("Berhasil ambil buku kategori:", data.data);
-        } else {
-          console.error("Gagal ambil buku kategori:", data.message);
-        }
-      } catch (error) {
-        console.error("Error saat ambil buku kategori:", error);
-      }
-    }
-  };
-  
-
   return (
-    <div className="flex h-screen bg-gray-100 raleway-general ">
+    <div className="flex h-screen bg-gray-100">
       <div className="w-64 bg-emerald-900 text-white flex flex-col justify-between">
         <div>
           <h2 className="text-2xl font-bold p-6">BookNest Admin</h2>
@@ -174,18 +175,18 @@ function LandingPageAdmin() {
               Kelola Kategori
             </button>
             <button
-              onClick={() => setActive("statusBuku")}
+              onClick={() => setActive("BukuKategori")}
               className={`text-left p-2 hover:bg-emerald-700 rounded ${
-                active === "statusBuku" ? "bg-emerald-600" : ""
+                active === "BukuKategori" ? "bg-emerald-600" : ""
               }`}
             >
-              <FaNeuter className="inline-block mr-2 text-yellow-400" />
-              Kelola Status Buku
+              <FaUserFriends className="inline-block mr-2 text-blue-600" />{" "}
+              Kelola Buku Kategori
             </button>
             <button
               onClick={() => setActive("BukuKategori")}
               className={`text-left p-2 hover:bg-emerald-700 rounded ${
-                active === "BukuKategori" ? "bg-emerald-600" : ""
+                active === "" ? "bg-emerald-600" : ""
               }`}
             >
               <FaUserFriends className="inline-block mr-2 text-blue-600" />{" "}
@@ -228,7 +229,7 @@ function LandingPageAdmin() {
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            src="/welcome.svg"
+            src="/public/welcome.svg"
             alt="Welcome Illustration"
             className="w-28 h-auto hidden md:block"
           />
@@ -247,7 +248,7 @@ function LandingPageAdmin() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
-                onClick={handleKlikBook}
+                onClick={handleKlikEksemplar}
                 className="bg-white/70 backdrop-blur-md border border-emerald-200 shadow-lg p-6 rounded-2xl hover:shadow-xl transition-all cursor-pointer"
               >
                 <div className="flex items-center justify-between mb-3">
@@ -257,10 +258,10 @@ function LandingPageAdmin() {
                   </span>
                 </div>
                 <h2 className="text-xl font-bold text-emerald-800">
-                  Kelola Buku
+                  Kelola Koleksi Buku
                 </h2>
                 <p className="text-sm text-gray-600 mt-1">
-                  Lihat & ubah daftar buku perpustakaan.
+                  Lihat & atur koleksi buku perpustakaan
                 </p>
               </motion.div>
 
@@ -273,7 +274,7 @@ function LandingPageAdmin() {
                 className="bg-white/70 backdrop-blur-md border border-indigo-200 shadow-lg p-6 rounded-2xl hover:shadow-xl transition-all cursor-pointer"
               >
                 <div className="flex items-center justify-between mb-3">
-                  <div className="text-4xl">🗂️</div>
+                  <div className="text-4xl">🗂</div>
                   <span className="text-sm font-semibold bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full">
                     {kategori.length || 0} kategori
                   </span>
@@ -285,117 +286,99 @@ function LandingPageAdmin() {
                   Atur klasifikasi buku sesuai tema.
                 </p>
               </motion.div>
-
-              <motion.div
-                whileHover={{ scale: 1.03 }}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-                onClick={handleKlikBukuKategori}
-                className="bg-white/70 backdrop-blur-md border border-orange-200 shadow-lg p-6 rounded-2xl hover:shadow-xl transition-all cursor-pointer"
-              >
-                <div className="flex items-center justify-between mb-3">
-                  <div className="text-4xl">📌</div>
-                  <span className="text-sm font-semibold bg-orange-100 text-rose-800 px-3 py-1 rounded-full">
-                    {statusBuku.length} status
-                  </span>
-                </div>
-                <h2 className="text-xl font-bold text-orange-800">
-                  Kelola Buku Kategori
-                </h2>
-                <p className="text-sm text-gray-600 mt-1">
-                  Lihat kategori dari berbagai buku.
-                </p>
-              </motion.div>
-              <motion.div
-                whileHover={{ scale: 1.03 }}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-                onClick={handleStatusBuku}
-                className="bg-white/70 backdrop-blur-md border border-rose-200 shadow-lg p-6 rounded-2xl hover:shadow-xl transition-all cursor-pointer"
-              >
-                <div className="flex items-center justify-between mb-3">
-                  <div className="text-4xl">📌</div>
-                  <span className="text-sm font-semibold bg-rose-100 text-rose-800 px-3 py-1 rounded-full">
-                    {statusBuku.length} status
-                  </span>
-                </div>
-                <h2 className="text-xl font-bold text-rose-800">Status Buku</h2>
-                <p className="text-sm text-gray-600 mt-1">
-                  Tentukan apakah buku sedang tersedia atau dipinjam.
-                </p>
-              </motion.div>
             </div>
-
-            {tampilStatus && (
-              <div>
-                <h2 className="text-2xl font-bold text-rose-800 mb-6">
-                  📌 Daftar Status Buku
-                </h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {statusBuku.map((status) => (
-                    <motion.div
-                      key={status.id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.3 }}
-                      className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm hover:shadow-md transition"
-                    >
-                      <h3 className="text-lg font-semibold text-gray-800 mb-2">
-                        {status.nama}
-                      </h3>
-                    </motion.div>
-                  ))}
-                </div>
-              </div>
-            )}
 
             {tampilBuku && (
               <div>
                 <h2 className="text-2xl font-bold text-emerald-800 mb-6">
                   📘 Daftar Buku
                 </h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {buku.map((book) => (
-                    <motion.div
-                      key={book.id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.3 }}
-                      className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm hover:shadow-md transition"
-                    >
-                      <h3 className="text-lg font-semibold text-gray-800 mb-2">
-                        {book.judul}
-                      </h3>
-                      <dl className="text-sm text-gray-600 space-y-1">
-                        <div>
-                          <dt className="inline font-medium">Pengarang:</dt>{" "}
-                          <dd className="inline">{book.pengarang}</dd>
-                        </div>
-                        <div>
-                          <dt className="inline font-medium">Penerbit:</dt>{" "}
-                          <dd className="inline">{book.penerbit}</dd>
-                        </div>
-                        <div>
-                          <dt className="inline font-medium">Tahun:</dt>{" "}
-                          <dd className="inline">{book.tahunTerbit}</dd>
-                        </div>
-                        <div>
-                          <dt className="inline font-medium">Status:</dt>{" "}
-                          <dd className="inline bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded text-xs">
-                            {book.statusBuku?.nama || "-"}
-                          </dd>
-                        </div>
-                        <div>
-                          <dt className="inline font-medium">Kategori:</dt>{" "}
-                          <dd className="inline  text-emerald-700 px-2 py-0.5 rounded text-xs">
-                            {book.kategori?.id || "-"}
-                          </dd>
-                        </div>
-                      </dl>
-                    </motion.div>
-                  ))}
+                <div className="relative w-full max-w-3xl mb-6 flex flex-col md:flex-row md:items-center gap-3">
+                  {/* Input Search */}
+                  <div className="relative flex-1">
+                    <FaSearch className="absolute top-3.5 left-4 text-gray-400 text-sm" />
+                    <input
+                      type="text"
+                      placeholder="Cari berdasarkan judul buku..."
+                      value={query}
+                      onChange={(e) => setQuery(e.target.value)}
+                      className="w-full pl-10 pr-4 py-2 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-sm bg-white"
+                    />
+                  </div>
+
+                  {/* Dropdown Filter Status */}
+                  <select
+                    value={statusFilter}
+                    placeholder="Filter Status"
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    className="w-full md:w-52 px-4 py-2 rounded-xl border border-gray-300 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  >
+                    <option value="" className="text-gray-400">
+                      Status
+                    </option>
+                    <option value="tersedia">Tersedia</option>
+                    <option value="dipinjam">Dipinjam</option>
+                  </select>
+                </div>
+
+                <div className="overflow-x-auto bg-gray-100 p-4 sm:p-6 rounded-lg shadow-md">
+                  <motion.table
+                    variants={tableVariants}
+                    initial="hidden"
+                    animate="visible"
+                    className="min-w-full divide-y divide-gray-200 border border-gray-200 rounded-lg"
+                  >
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Kode Eksemplar
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Judul
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Pengarang
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Penerbit
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Tahun Terbit
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Status
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {filteredEksemplar.map((bukus) => (
+                        <motion.tr
+                          key={bukus.id}
+                          variants={rowVariants}
+                          className="hover:bg-gray-50 transition-colors duration-150"
+                        >
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            {bukus.kodeEksemplar}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                            {bukus.buku?.judul}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                            {bukus.buku?.pengarang}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                            {bukus.buku?.penerbit}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                            {bukus.buku?.tahunTerbit}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                            {bukus.status}
+                          </td>
+                        </motion.tr>
+                      ))}
+                    </tbody>
+                  </motion.table>
                 </div>
               </div>
             )}
@@ -417,13 +400,14 @@ function LandingPageAdmin() {
                       <h3 className="text-lg font-semibold text-gray-800 mb-2">
                         {item.nama}
                       </h3>
+                      <p className="text-sm text-gray-600">
+                        {item.deskripsi || "Tanpa deskripsi."}
+                      </p>
                     </motion.div>
                   ))}
                 </div>
               </div>
             )}
-
-            
           </motion.div>
         )}
 
@@ -446,16 +430,6 @@ function LandingPageAdmin() {
             className="p-6"
           >
             <AddKategoriForm />
-          </motion.div>
-        )}
-        {active === "statusBuku" && (
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="p-6"
-          >
-            <AddStatusFrom />
           </motion.div>
         )}
 

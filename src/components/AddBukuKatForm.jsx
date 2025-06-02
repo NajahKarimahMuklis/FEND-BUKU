@@ -152,7 +152,7 @@ function AddBukuKatForm() {
       {/* Ilustrasi Section */}
       <div className="hidden md:block flex-1">
         <img
-          src="/bukukat.svg" // ganti dengan ilustrasi SVG yang kamu pakai
+          src="/bukukat.svg"
           alt="Ilustrasi Tambah Buku"
           className="w-full max-w-sm mx-auto"
         />

@@ -25,6 +25,11 @@ function LoginPage() {
 
       const data = await res.json();
 
+      if (!res.ok) {
+        setMessage(data.message || "Login gagal");
+        return;
+      }
+
       if (res.ok) {
         setMessage(data.message);
         document.cookie = `token=${data.token}; path=/; max-age=3600`;

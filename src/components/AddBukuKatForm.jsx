@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import { FaBookOpen, FaTags } from "react-icons/fa";
+import { FaBookOpen } from "react-icons/fa";
 
 function AddBukuKatForm() {
   const [idBuku, setIdBuku] = useState("");
-  const [idKategori, setIdKategori] = useState("");
+  const [kategoriId, setKategoriId] = useState("");
   const [bukuList, setBukuList] = useState([]);
   const [kategoriList, setKategoriList] = useState([]);
   const [sukses, setSukses] = useState(false);
@@ -39,7 +39,7 @@ function AddBukuKatForm() {
         const data = await res.json();
         if (res.ok) {
           setKategoriList(data.data || []);
-          setIdKategori(data.data?.[0]?.id || "");
+          setKategoriId(data.data?.[0]?.id || "");
         } else {
           console.error("Gagal mengambil kategori:", data.message);
         }
@@ -54,7 +54,7 @@ function AddBukuKatForm() {
     e.preventDefault();
     const bukuKategoriBaru = {
       idBuku: parseInt(idBuku),
-      idKategori: parseInt(idKategori)
+      kategoriId: parseInt(kategoriId) 
     };
     try {
       const res = await fetch("http://localhost:3000/bukuKategori", {
@@ -66,8 +66,9 @@ function AddBukuKatForm() {
       const data = await res.json();
       if (res.ok) {
         alert("Buku kategori berhasil ditambahkan!");
-        setIdBuku("");
-        setIdKategori("");
+        setIdBuku();
+        setKategoriId();
+        console.log("Buku kategori berhasil ditambahkan:", data);
         setSukses(true);
       } else {
         alert("Gagal: " + (data.message || JSON.stringify(data)));
@@ -80,10 +81,9 @@ function AddBukuKatForm() {
 
   return (
     <div className="bg-white rounded-2xl shadow-lg p-6 md:p-10 max-w-6xl mx-auto flex flex-col md:flex-row items-center gap-10">
-      {/* Form Section */}
       <div className="flex-1 w-full">
-        <h2 className="text-2xl font-semibold text-green-700 mb-6 flex items-center gap-2">
-          <FaBookOpen className="w-6 h-6 text-green-600" />
+        <h2 className="text-2xl font-semibold text-emerald-700 mb-6 flex items-center gap-2">
+          <FaBookOpen className="w-6 h-6 text-emerald-600" />
           Tambah Buku ke Kategori
         </h2>
 
@@ -104,7 +104,7 @@ function AddBukuKatForm() {
               </option>
               {bukuList.map((buku) => (
                 <option key={buku.id} value={buku.id}>
-                  {buku.judul} ({buku.statusBuku?.nama || "Tanpa Status"})
+                  {buku.judul}
                 </option>
               ))}
             </select>
@@ -116,10 +116,10 @@ function AddBukuKatForm() {
               Kategori
             </label>
             <select
-              value={idKategori}
-              onChange={(e) => setIdKategori(e.target.value)}
+              value={kategoriId}
+              onChange={(e) => setKategoriId(e.target.value)}
               required
-              className="w-full border border-gray-300 rounded-md px-4 py-3 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full border border-gray-300 rounded-md px-4 py-3 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500"
             >
               <option value="" disabled>
                 Pilih Kategori
@@ -135,7 +135,7 @@ function AddBukuKatForm() {
           {/* Tombol Submit */}
           <button
             type="submit"
-            className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-md transition-all"
+            className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 rounded-md transition-all"
           >
             Simpan Kategori
           </button>
@@ -143,7 +143,7 @@ function AddBukuKatForm() {
 
         {/* Pesan sukses */}
         {sukses && (
-          <p className="text-green-600 font-medium mt-4">
+          <p className="text-emerald-600 font-medium mt-4">
             ✅ Buku berhasil ditambahkan ke kategori!
           </p>
         )}

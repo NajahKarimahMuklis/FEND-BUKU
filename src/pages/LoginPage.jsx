@@ -53,6 +53,7 @@ function LoginPage() {
   return (
     <div className="relative overflow-hidden min-h-screen raleway-general">
       <img
+      
         src={bgImage}
         alt="Background"
         className="absolute w-full h-full object-cover -z-10"

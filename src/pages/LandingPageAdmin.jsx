@@ -2,446 +2,466 @@ import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import {
   FaBook,
+  FaCheck,
   FaFolder,
   FaHome,
   FaSearch,
   FaUserFriends,
+  FaExclamationTriangle, // Ikon untuk pop-up token
+  FaBookOpen, // Ikon baru untuk Kelola Buku
+  FaTags, // Ikon baru untuk Kelola Kategori
+  FaFilter, // Ikon untuk filter
+  FaListUl, // Ikon untuk Daftar Buku
+  FaThLarge, // Ikon untuk Daftar Kategori
+  FaCheckCircle, // Ikon untuk status Tersedia
+  FaRegClock // Ikon untuk status Dipinjam
 } from "react-icons/fa";
 import { useNavigate } from "react-router";
 import AddBookForm from "../components/AddBookForm";
 import AddBukuKatForm from "../components/AddBukuKatForm";
 import AddKategoriForm from "../components/AddKategoriForm";
+import KonfirmasiPermintaan from "../components/KonfirmasiPermintaan";
 
 function LandingPageAdmin() {
   const [adminName, setAdminName] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [query, setQuery] = useState("");
   const [active, setActive] = useState("dashboard");
-  const [buku, setBuku] = useState([]);
-  const [loading, setLoading] = useState(false);
   const [eksemplarBuku, setEksemplarBuku] = useState([]);
   const [kategori, setKategori] = useState([]);
   const [filteredEksemplar, setFilteredEksemplar] = useState([]);
-  const [sudahAmbil, setSudahAmbil] = useState(false);
+  const [sudahAmbilBuku, setSudahAmbilBuku] = useState(false);
+  const [sudahAmbilKategori, setSudahAmbilKategori] = useState(false);
   const [tampilBuku, setTampilBuku] = useState(false);
   const [tampilKategori, setTampilKategori] = useState(false);
   const navigate = useNavigate();
+  const [showTokenExpiryPopup, setShowTokenExpiryPopup] = useState(false);
 
   useEffect(() => {
-    const adminName = localStorage.getItem("adminName");
-    setAdminName(adminName);
-  }, []);
+    const adminNameFromStorage = localStorage.getItem("adminName");
+    setAdminName(adminNameFromStorage);
+    // Consider initial redirect if no token/adminName, ensure this logic is sound for your app's flow.
+    // if (!adminNameFromStorage && !document.cookie.includes("token=")) {
+    //   navigate("/login");
+    // }
+  }, []); 
 
   const tableVariants = {
     hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.05, // Sedikit jeda antar animasi baris
-      },
-    },
+    visible: { opacity: 1, transition: { staggerChildren: 0.03 } }
   };
-
   const rowVariants = {
-    hidden: { opacity: 0, y: 20 },
+    hidden: { opacity: 0, y: 15 },
     visible: {
       opacity: 1,
       y: 0,
-      transition: {
-        duration: 0.3,
-        ease: "easeOut",
-      },
-    },
+      transition: { duration: 0.25, ease: "easeOut" }
+    }
+  };
+
+  const handleSessionExpired = () => {
+    document.cookie = "token=; Max-Age=0; path=/;";
+    localStorage.removeItem("adminName");
+    setAdminName(""); 
+    setShowTokenExpiryPopup(true);
+    setTimeout(() => {
+      setShowTokenExpiryPopup(false);
+      navigate("/login");
+    }, 3500);
   };
 
   const handleLogout = () => {
-    document.cookie = "token=; Max-Age=0; path=/;";
-    navigate("/login");
+    handleSessionExpired();
   };
 
-  // Search eksemplar buku
+  const fetchDataWithAuth = async (url, options = {}) => {
+    const defaultOptions = {
+      method: "GET",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+        ...options.headers
+      },
+      ...options
+    };
+
+    const response = await fetch(url, defaultOptions);
+
+    if (response.status === 401) {
+      handleSessionExpired();
+      throw new Error("Sesi kedaluwarsa"); 
+    }
+    return response;
+  };
+  
   useEffect(() => {
-    if (!query) {
-      setFilteredEksemplar(eksemplarBuku);
-    } else {
-      const hasil = eksemplarBuku.filter((item) => {
-        const q = query.toLowerCase();
-        return (
+    let hasilFilter = [...eksemplarBuku];
+    if (query) {
+      const q = query.toLowerCase();
+      hasilFilter = hasilFilter.filter(
+        (item) =>
           item.buku?.judul?.toLowerCase().includes(q) ||
           item.buku?.pengarang?.toLowerCase().includes(q) ||
           item.buku?.penerbit?.toLowerCase().includes(q) ||
           item.buku?.tahunTerbit?.toString().includes(q) ||
           item.kodeEksemplar?.toLowerCase().includes(q)
-        );
-      });
-      setFilteredEksemplar(hasil);
+      );
     }
-  }, [query, eksemplarBuku]);
-
-  useEffect(() => {
-    if (!statusFilter) {
-      setFilteredEksemplar(eksemplarBuku);
-    } else {
-      const hasil = eksemplarBuku.filter(
+    if (statusFilter) {
+      hasilFilter = hasilFilter.filter(
         (item) => item.status?.toLowerCase() === statusFilter.toLowerCase()
       );
-      setFilteredEksemplar(hasil);
     }
-  }, [statusFilter, eksemplarBuku]);
+    setFilteredEksemplar(hasilFilter);
+  }, [query, statusFilter, eksemplarBuku]);
 
   const handleKlikEksemplar = async () => {
-    setTampilBuku((prev) => !prev);
-    if (!sudahAmbil) {
-      try {
-        const res = await fetch("http://localhost:3000/eksemplarBuku", {
-          method: "GET",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
-
-        const data = await res.json();
-        if (res.ok) {
-          setEksemplarBuku(data.data);
-          console.log("Berhasil mengambil eksemplar buku:", data);
-        } else {
-          console.error("Gagal mendapatkan eksemplar buku:", data.message);
+    const akanTampil = !tampilBuku;
+    setTampilBuku(akanTampil);
+    if (akanTampil) {
+      setTampilKategori(false);
+      if (!sudahAmbilBuku) {
+        try {
+          const res = await fetchDataWithAuth(
+            "http://localhost:3000/eksemplarBuku"
+          );
+          // fetchDataWithAuth throws on 401, so res should be valid if we reach here
+          const data = await res.json(); 
+          if (res.ok) {
+            setEksemplarBuku(data.data || []);
+            setSudahAmbilBuku(true);
+          } else {
+            console.error("Gagal mendapatkan eksemplar buku:", data.message);
+          }
+        } catch (error) {
+          if (error.message !== "Sesi kedaluwarsa") {
+            console.error("Error fetching books:", error);
+          }
         }
-      } catch (error) {
-        console.error("Error fetching books:", error);
       }
     }
   };
 
   const handleKlikKategori = async () => {
-    setTampilKategori((prev) => !prev);
-    if (!sudahAmbil) {
-      try {
-        const res = await fetch("http://localhost:3000/kategori", {
-          method: "GET",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
-
-        const data = await res.json();
-        if (res.ok) {
-          setKategori(data.data);
-          console.log("Berhasil mengambil kategori:", data);
-        } else {
-          console.error("Gagal mendapatkan kategori:", data.message);
+    const akanTampil = !tampilKategori;
+    setTampilKategori(akanTampil);
+    if (akanTampil) {
+      setTampilBuku(false);
+      if (!sudahAmbilKategori) {
+        try {
+          const res = await fetchDataWithAuth("http://localhost:3000/kategori");
+          // fetchDataWithAuth throws on 401, so res should be valid
+          const data = await res.json();
+          if (res.ok) {
+            setKategori(data.data || []);
+            setSudahAmbilKategori(true);
+          } else {
+            console.error("Gagal mendapatkan kategori:", data.message);
+          }
+        } catch (error) {
+          if (error.message !== "Sesi kedaluwarsa") {
+            console.error("Error fetching categories:", error);
+          }
         }
-      } catch (error) {
-        console.error("Error fetching categories:", error);
       }
     }
   };
 
+  const globalApiConfig = { fetchDataWithAuth, handleSessionExpired };
+
+  const DashboardCard = ({ icon, title, description, onClick, gradientFrom, gradientTo, textColor }) => (
+    <motion.div
+      whileHover={{ scale: 1.03, y: -5 }}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: "circOut" }}
+      onClick={onClick}
+      className={`bg-gradient-to-br ${gradientFrom} ${gradientTo} p-6 rounded-2xl shadow-xl hover:shadow-2xl transition-all cursor-pointer text-white min-h-[180px] flex flex-col justify-between`}
+      >
+      <div>
+        <div className={`mb-3 text-4xl ${textColor} opacity-80`}>{icon}</div>
+        <h2 className={`text-xl font-bold ${textColor}`}>{title}</h2>
+      </div>
+      <p className={`text-sm ${textColor} opacity-90 mt-1`}>{description}</p>
+    </motion.div>
+  );
+
   return (
-    <div className="flex h-screen bg-gray-100">
-      <div className="w-64 bg-emerald-900 text-white flex flex-col justify-between">
+    <div className="flex h-screen overflow-hidden bg-slate-100 font-sans">
+      {showTokenExpiryPopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-[1000]">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.7 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.3 }}
+            className="bg-white p-8 rounded-xl shadow-2xl text-center max-w-md mx-4"
+          >
+            <FaExclamationTriangle className="text-7xl text-yellow-500 mx-auto mb-6" />
+            <h3 className="text-2xl font-bold text-slate-800 mb-3">Sesi Kedaluwarsa</h3>
+            <p className="text-slate-600 mb-6">
+              Sesi Anda telah berakhir. Anda akan dialihkan ke halaman login secara otomatis.
+            </p>
+            <div className="w-full bg-gray-200 rounded-full h-2.5 mb-4 overflow-hidden">
+              <motion.div
+                className="bg-yellow-500 h-2.5 rounded-full"
+                initial={{ width: "0%" }}
+                animate={{ width: "100%" }}
+                transition={{ duration: 3.2, ease: "linear" }}
+              />
+            </div>
+            <p className="text-sm text-slate-500">Mengalihkan...</p>
+          </motion.div>
+        </div>
+      )}
+
+      <div
+        className={`w-64 bg-emerald-800 text-slate-100 flex flex-col justify-between shadow-lg transition-all duration-300 ${
+          showTokenExpiryPopup ? "blur-sm pointer-events-none" : ""
+        }`}
+      >
         <div>
-          <h2 className="text-2xl font-bold p-6">BookNest Admin</h2>
-          <nav className="flex flex-col gap-2 p-4">
-            <button
-              onClick={() => setActive("dashboard")}
-              className={`text-left p-2 hover:bg-emerald-700 rounded ${
-                active === "dashboard" ? "bg-emerald-600" : ""
-              }`}
-            >
-              <div>
-                <FaHome className="inline-block mr-2 text-yellow-400 " />
-                Dashboard
-              </div>
-            </button>
-            <button
-              onClick={() => setActive("buku")}
-              className={`text-left p-2 hover:bg-emerald-700 rounded ${
-                active === "buku" ? "bg-emerald-600" : ""
-              }`}
-            >
-              <FaBook className="inline-block mr-2 text-blue-300" />
-              Kelola Buku
-            </button>
-            <button
-              onClick={() => setActive("kategori")}
-              className={`text-left p-2 hover:bg-emerald-700 rounded ${
-                active === "kategori" ? "bg-emerald-600" : ""
-              }`}
-            >
-              <FaFolder className="inline-block mr-2 text-orange-400" />
-              Kelola Kategori
-            </button>
-            <button
-              onClick={() => setActive("BukuKategori")}
-              className={`text-left p-2 hover:bg-emerald-700 rounded ${
-                active === "BukuKategori" ? "bg-emerald-600" : ""
-              }`}
-            >
-              <FaUserFriends className="inline-block mr-2 text-blue-600" />{" "}
-              Kelola Buku Kategori
-            </button>
-            <button
-              onClick={() => setActive("BukuKategori")}
-              className={`text-left p-2 hover:bg-emerald-700 rounded ${
-                active === "" ? "bg-emerald-600" : ""
-              }`}
-            >
-              <FaUserFriends className="inline-block mr-2 text-blue-600" />{" "}
-              Kelola Buku Kategori
-            </button>
+          <h2 className="text-2xl font-semibold p-6 tracking-tight text-white">
+            BookNest Admin
+          </h2>
+          <nav className="flex flex-col gap-1 p-3">
+            {[
+              { label: "Dashboard", icon: <FaHome />, id: "dashboard", color: "text-sky-300" },
+              { label: "Kelola Buku", icon: <FaBook />, id: "buku", color: "text-rose-300" },
+              { label: "Kelola Kategori", icon: <FaFolder />, id: "kategori", color: "text-amber-300" },
+              { label: "Buku Kategori", icon: <FaUserFriends />, id: "BukuKategori", color: "text-fuchsia-300" },
+              { label: "Konfirmasi", icon: <FaCheck />, id: "Konfirmasi", color: "text-lime-300" }
+            ].map((item) => (
+              <button
+                key={item.id}
+                onClick={() => setActive(item.id)}
+                className={`flex items-center text-left p-3 hover:bg-emerald-700 rounded-lg transition-colors duration-150 ${
+                  active === item.id ? "bg-emerald-600 shadow-inner" : ""
+                }`}
+              >
+                <span className={`w-6 h-6 flex items-center justify-center mr-3 ${item.color}`}>
+                  {item.icon}
+                </span>
+                <span className="font-medium text-sm">{item.label}</span>
+              </button>
+            ))}
           </nav>
         </div>
-        <div className="p-4">
+        <div className="p-4 border-t border-emerald-700">
           <button
             onClick={handleLogout}
-            className="w-full bg-red-600 py-2 rounded hover:bg-red-500"
+            className="w-full bg-red-600 py-2.5 px-4 rounded-lg hover:bg-red-700 transition-colors duration-150 font-semibold text-sm text-white"
           >
             Keluar
           </button>
         </div>
       </div>
 
-      <div className="flex-1 p-8 overflow-y-auto">
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="mb-8 bg-gradient-to-r from-emerald-50 to-white p-6 rounded-xl shadow flex justify-between items-center"
-        >
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 bg-emerald-200 text-emerald-800 rounded-full flex items-center justify-center text-2xl font-bold shadow-inner">
-              {adminName?.charAt(0)?.toUpperCase()}
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-emerald-800">
-                Selamat Datang, {adminName?.split("@")[0]} 👋
-              </h1>
-              <p className="text-sm text-gray-600">
-                Semoga harimu menyenangkan! Ayo kelola koleksi perpustakaan hari
-                ini 📚
-              </p>
-            </div>
-          </div>
-          <motion.img
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            src="/public/welcome.svg"
-            alt="Welcome Illustration"
-            className="w-28 h-auto hidden md:block"
-          />
-        </motion.div>
+      <div
+        className={`flex-1 overflow-y-auto transition-all duration-300 ${
+          showTokenExpiryPopup ? "blur-sm pointer-events-none" : ""
+        } ${
+          active === "dashboard"
+            ? "p-6 md:p-8 lg:p-10"
+            : "pt-3 md:pt-4 lg:pt-6 px-6 pb-6 md:px-8 md:pb-8 lg:px-10 lg:pb-10"
+        }`}
+      >
+        {active === "dashboard" && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="mb-8"
+          >
+            <h1 className="text-3xl font-bold text-slate-800">
+              Selamat Datang, {adminName?.split("@")[0] || "Admin"}! 👋
+            </h1>
+            <p className="text-md text-slate-600 mt-1">
+              Semoga harimu menyenangkan! Ayo kelola perpustakaan hari ini.
+            </p>
+          </motion.div>
+        )}
 
         {active === "dashboard" && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}
-            className="space-y-12"
+            className="space-y-10"
           >
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-              <motion.div
-                whileHover={{ scale: 1.03 }}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
+              <DashboardCard
+                icon={<FaBookOpen />}
+                title="Kelola Koleksi Buku"
+                description="Lihat, tambah, dan atur semua koleksi buku perpustakaan."
                 onClick={handleKlikEksemplar}
-                className="bg-white/70 backdrop-blur-md border border-emerald-200 shadow-lg p-6 rounded-2xl hover:shadow-xl transition-all cursor-pointer"
-              >
-                <div className="flex items-center justify-between mb-3">
-                  <div className="text-4xl">📚</div>
-                  <span className="text-sm font-semibold bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full">
-                    {buku.length} buku
-                  </span>
-                </div>
-                <h2 className="text-xl font-bold text-emerald-800">
-                  Kelola Koleksi Buku
-                </h2>
-                <p className="text-sm text-gray-600 mt-1">
-                  Lihat & atur koleksi buku perpustakaan
-                </p>
-              </motion.div>
-
-              <motion.div
-                whileHover={{ scale: 1.03 }}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.1 }}
+                gradientFrom="from-sky-500"
+                gradientTo="to-indigo-600"
+                textColor="text-white"
+              />
+              <DashboardCard
+                icon={<FaTags />}
+                title="Kelola Kategori Buku"
+                description="Atur klasifikasi dan pengelompokan buku berdasarkan tema."
                 onClick={handleKlikKategori}
-                className="bg-white/70 backdrop-blur-md border border-indigo-200 shadow-lg p-6 rounded-2xl hover:shadow-xl transition-all cursor-pointer"
-              >
-                <div className="flex items-center justify-between mb-3">
-                  <div className="text-4xl">🗂</div>
-                  <span className="text-sm font-semibold bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full">
-                    {kategori.length || 0} kategori
-                  </span>
-                </div>
-                <h2 className="text-xl font-bold text-indigo-800">
-                  Kelola Kategori
-                </h2>
-                <p className="text-sm text-gray-600 mt-1">
-                  Atur klasifikasi buku sesuai tema.
-                </p>
-              </motion.div>
+                gradientFrom="from-emerald-500"
+                gradientTo="to-green-600"
+                textColor="text-white"
+              />
             </div>
 
             {tampilBuku && (
-              <div>
-                <h2 className="text-2xl font-bold text-emerald-800 mb-6">
-                  📘 Daftar Buku
+              <motion.section
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: 0.1 }}
+                className="bg-white p-6 rounded-2xl shadow-xl space-y-6"
+              >
+                <h2 className="text-2xl font-semibold text-slate-800 flex items-center">
+                  <FaListUl className="mr-3 text-sky-600" />
+                  Daftar Koleksi Buku
                 </h2>
-                <div className="relative w-full max-w-3xl mb-6 flex flex-col md:flex-row md:items-center gap-3">
-                  {/* Input Search */}
-                  <div className="relative flex-1">
-                    <FaSearch className="absolute top-3.5 left-4 text-gray-400 text-sm" />
+                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 flex flex-col md:flex-row items-center gap-4 shadow-sm">
+                  <div className="relative w-full md:flex-1">
+                    <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
                     <input
                       type="text"
-                      placeholder="Cari berdasarkan judul buku..."
+                      placeholder="Cari buku (judul, pengarang, dll...)"
                       value={query}
                       onChange={(e) => setQuery(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-sm bg-white"
+                      className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-sm shadow-inner"
                     />
                   </div>
-
-                  {/* Dropdown Filter Status */}
-                  <select
-                    value={statusFilter}
-                    placeholder="Filter Status"
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                    className="w-full md:w-52 px-4 py-2 rounded-xl border border-gray-300 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                  >
-                    <option value="" className="text-gray-400">
-                      Status
-                    </option>
-                    <option value="tersedia">Tersedia</option>
-                    <option value="dipinjam">Dipinjam</option>
-                  </select>
+                  <div className="relative w-full md:w-auto">
+                    <FaFilter className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                    <select
+                      value={statusFilter}
+                      onChange={(e) => setStatusFilter(e.target.value)}
+                      className="w-full md:w-52 pl-10 pr-4 py-2.5 appearance-none rounded-lg border border-slate-300 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-sm shadow-inner"
+                    >
+                      <option value="">Semua Status</option>
+                      <option value="tersedia">Tersedia</option>
+                      <option value="dipinjam">Dipinjam</option>
+                    </select>
+                  </div>
                 </div>
 
-                <div className="overflow-x-auto bg-gray-100 p-4 sm:p-6 rounded-lg shadow-md">
+                <div className="overflow-x-auto rounded-lg border border-slate-200 shadow-md">
                   <motion.table
                     variants={tableVariants}
                     initial="hidden"
                     animate="visible"
-                    className="min-w-full divide-y divide-gray-200 border border-gray-200 rounded-lg"
+                    className="min-w-full text-sm"
                   >
-                    <thead className="bg-gray-50">
+                    <thead className="bg-slate-100">
                       <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Kode Eksemplar
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Judul
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Pengarang
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Penerbit
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Tahun Terbit
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Status
-                        </th>
+                        {[
+                          "Kode", "Judul Buku", "Kategori", "Pengarang", "Penerbit", "Tahun", "Status"
+                        ].map((head) => (
+                          <th key={head} className="px-5 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                            {head}
+                          </th>
+                        ))}
                       </tr>
                     </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {filteredEksemplar.map((bukus) => (
-                        <motion.tr
-                          key={bukus.id}
-                          variants={rowVariants}
-                          className="hover:bg-gray-50 transition-colors duration-150"
-                        >
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                            {bukus.kodeEksemplar}
+                    <tbody className="bg-white divide-y divide-slate-200">
+                      {filteredEksemplar.length > 0 ? (
+                        filteredEksemplar.map((bukus) => (
+                          <motion.tr
+                            key={bukus.id || bukus.kodeEksemplar}
+                            variants={rowVariants}
+                            className="hover:bg-slate-50 transition-colors"
+                          >
+                            <td className="px-5 py-4 whitespace-nowrap font-mono text-xs text-slate-600">{bukus.kodeEksemplar}</td>
+                            <td className="px-5 py-4 whitespace-nowrap font-medium text-slate-800 max-w-xs truncate" title={bukus.buku?.judul}>
+                              {bukus.buku?.judul}
+                            </td>
+                            <td className="px-5 py-4 whitespace-nowrap text-slate-600 text-xs max-w-xs truncate" title={bukus.buku?.kategori?.map((k) => k.kategori?.nama).join(", ") || "-"}>
+                              {bukus.buku?.kategori?.map((k) => k.kategori?.nama).join(", ") || "-"}
+                            </td>
+                            <td className="px-5 py-4 whitespace-nowrap text-slate-600 max-w-xs truncate" title={bukus.buku?.pengarang}>
+                              {bukus.buku?.pengarang}
+                            </td>
+                            <td className="px-5 py-4 whitespace-nowrap text-slate-600 max-w-xs truncate" title={bukus.buku?.penerbit}>
+                              {bukus.buku?.penerbit}
+                            </td>
+                            <td className="px-5 py-4 whitespace-nowrap text-slate-600">{bukus.buku?.tahunTerbit}</td>
+                            <td className="px-5 py-4 whitespace-nowrap">
+                              <span
+                                className={`px-2.5 py-1 inline-flex items-center text-xs font-semibold rounded-full capitalize ${
+                                  bukus.status?.toLowerCase() === "tersedia"
+                                    ? "bg-green-100 text-green-700"
+                                    : "bg-yellow-100 text-yellow-700"
+                                }`}
+                              >
+                                {bukus.status?.toLowerCase() === "tersedia" ? <FaCheckCircle className="mr-1.5" /> : <FaRegClock className="mr-1.5" />}
+                                {bukus.status}
+                              </span>
+                            </td>
+                          </motion.tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan="7" className="text-center py-8 text-slate-500 italic">
+                            Tidak ada data buku yang cocok dengan filter Anda.
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                            {bukus.buku?.judul}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                            {bukus.buku?.pengarang}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                            {bukus.buku?.penerbit}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                            {bukus.buku?.tahunTerbit}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                            {bukus.status}
-                          </td>
-                        </motion.tr>
-                      ))}
+                        </tr>
+                      )}
                     </tbody>
                   </motion.table>
                 </div>
-              </div>
+              </motion.section>
             )}
 
             {tampilKategori && (
-              <div>
-                <h2 className="text-2xl font-bold text-indigo-800 mb-6">
-                  📂 Daftar Kategori
+              <motion.section
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: 0.1 }}
+                className="bg-white p-6 rounded-2xl shadow-xl space-y-6"
+              >
+                <h2 className="text-2xl font-semibold text-slate-800 flex items-center">
+                  <FaThLarge className="mr-3 text-emerald-600" />
+                  Daftar Kategori Buku
                 </h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {kategori.map((item) => (
-                    <motion.div
-                      key={item.id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.3 }}
-                      className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm hover:shadow-md transition"
-                    >
-                      <h3 className="text-lg font-semibold text-gray-800 mb-2">
-                        {item.nama}
-                      </h3>
-                      <p className="text-sm text-gray-600">
-                        {item.deskripsi || "Tanpa deskripsi."}
-                      </p>
-                    </motion.div>
-                  ))}
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+                  {kategori.length > 0 ? (
+                    kategori.map((item) => (
+                      <motion.div
+                        key={item.id}
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 0.3 }}
+                        className="bg-slate-50 border border-slate-200 rounded-xl p-5 shadow-sm hover:shadow-lg hover:border-emerald-300 transform hover:-translate-y-1 transition-all"
+                      >
+                        <div className="flex items-center mb-2">
+                          <FaFolder className="text-emerald-500 mr-2.5 text-lg" />
+                          <h3 className="text-md font-semibold text-slate-800 truncate" title={item.nama}>
+                            {item.nama}
+                          </h3>
+                        </div>
+                        <p className="text-xs text-slate-600 line-clamp-3 leading-relaxed">
+                          {item.deskripsi || "Tidak ada deskripsi."}
+                        </p>
+                      </motion.div>
+                    ))
+                  ) : (
+                    <p className="col-span-full text-center py-8 text-slate-500 italic">
+                      Belum ada kategori yang ditambahkan.
+                    </p>
+                  )}
                 </div>
-              </div>
+              </motion.section>
             )}
           </motion.div>
         )}
 
-        {active === "buku" && (
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="p-6"
-          >
-            <AddBookForm onSuccess={() => console.log("Form sukses")} />
-          </motion.div>
-        )}
-
-        {active === "kategori" && (
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="p-6"
-          >
-            <AddKategoriForm />
-          </motion.div>
-        )}
-
-        {active === "BukuKategori" && (
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="p-6"
-          >
-            <AddBukuKatForm />
-          </motion.div>
+        {active !== "dashboard" && (
+          <div className="bg-white p-6 md:p-8 rounded-2xl shadow-xl">
+            {active === "buku" && <AddBookForm globalApiConfig={globalApiConfig} onSuccess={() => { console.log("Form buku sukses"); setSudahAmbilBuku(false); }} />}
+            {active === "kategori" && <AddKategoriForm globalApiConfig={globalApiConfig} onSuccess={() => { console.log("Kategori Form sukses"); setSudahAmbilKategori(false); }}/>}
+            {active === "BukuKategori" && <AddBukuKatForm globalApiConfig={globalApiConfig} />}
+            {active === "Konfirmasi" && <KonfirmasiPermintaan globalApiConfig={globalApiConfig} />}
+          </div>
         )}
       </div>
     </div>

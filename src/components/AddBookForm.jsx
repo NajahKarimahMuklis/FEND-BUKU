@@ -1,30 +1,13 @@
-import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { useState } from "react";
 import { FaBookOpen, FaSave } from "react-icons/fa";
 
 function AddBookForm({ onSuccess }) {
   const [judul, setJudul] = useState("");
   const [pengarang, setPengarang] = useState("");
+  const [jumlahBuku, setJumlahBuku] = useState("");
   const [penerbit, setPenerbit] = useState("");
   const [tahunTerbit, setTahunTerbit] = useState("");
-  const [statusBukuId, setStatusBukuId] = useState("");
-  const [statusList, setStatusList] = useState([]);
-
-  useEffect(() => {
-    const fetchStatusBuku = async () => {
-      try {
-        const res = await fetch("http://localhost:3000/statusBuku", {
-          credentials: "include"
-        });
-        const data = await res.json();
-        if (res.ok) setStatusList(data.data);
-        else console.error("Gagal ambil status buku:", data.message);
-      } catch (err) {
-        console.error("Error fetch status buku:", err);
-      }
-    };
-    fetchStatusBuku();
-  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -33,7 +16,7 @@ function AddBookForm({ onSuccess }) {
       pengarang,
       penerbit,
       tahunTerbit: parseInt(tahunTerbit),
-      statusBukuId: parseInt(statusBukuId)
+      jumlahBuku : parseInt(jumlahBuku)
     };
     try {
       const res = await fetch("http://localhost:3000/buku", {
@@ -49,7 +32,7 @@ function AddBookForm({ onSuccess }) {
         setPengarang("");
         setPenerbit("");
         setTahunTerbit("");
-        setStatusBukuId("");
+        setJumlahBuku("");
         onSuccess?.();
       } else {
         alert("Gagal: " + (data.message || JSON.stringify(data)));
@@ -68,11 +51,7 @@ function AddBookForm({ onSuccess }) {
     >
       {/* Ilustrasi Kiri */}
       <div className="hidden md:flex items-center justify-center w-1/2">
-        <img
-          src="/rbooks.svg" 
-          alt="Buku"
-          className="w-80 drop-shadow-2xl"
-        />
+        <img src="/rbooks.svg" alt="Buku" className="w-80 drop-shadow-2xl" />
       </div>
 
       {/* Form Kanan */}
@@ -114,27 +93,22 @@ function AddBookForm({ onSuccess }) {
             type="number"
             placeholder="Tahun Terbit"
             value={tahunTerbit}
+            min={1000}
+            max={new Date().getFullYear()}
             onChange={(e) => setTahunTerbit(e.target.value)}
             required
             className="input-field"
           />
         </div>
-
-        <select
-          value={statusBukuId}
-          onChange={(e) => setStatusBukuId(e.target.value)}
+        <input
+          typeof="number"
+          placeholder="Jumlah Buku"
+          value={jumlahBuku}
+          min={0}
+          onChange={(e) => setJumlahBuku(e.target.value)}
           required
           className="w-full border border-gray-300 rounded-lg px-4 py-3 text-gray-700"
-        >
-          <option value="" disabled>
-            Pilih Status Buku
-          </option>
-          {statusList.map((status) => (
-            <option key={status.id} value={status.id}>
-              {status.nama}
-            </option>
-          ))}
-        </select>
+        />
 
         <button
           type="submit"

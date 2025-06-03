@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import bgImage from "../assets/bg-register.png";
-import logo from "/logo.png" 
+import logo from "../assets/logo.png" 
 import { motion } from "framer-motion";
 
 
@@ -45,9 +45,9 @@ export default function Register() {
       setMessage("Terjadi kesalahan pada server.");
     }
   };
-
+  
   return (
-    <div className="relative overflow-hidden h-screen  raleway-general">
+    <div className="relative overflow-hidden h-screen raleway-general">
       {/* Background image */}
       <img
         src={bgImage}

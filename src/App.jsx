@@ -8,6 +8,7 @@ import KategoriPage from "./pages/KategoriPage";
 import BukuKategoriPage from "./pages/BukuKategoriPage";
 import LandingPageAdmin from "./pages/LandingPageAdmin";
 import LandingPageUser from "./pages/LandingPageUser";
+import KonfirmasiPermintaan from "./components/KonfirmasiPermintaan";
 function App() {
   return (
     <Router>
@@ -22,6 +23,7 @@ function App() {
         <Route path="/bukuKategori" element={<BukuKategoriPage />} />
         <Route path="/admin/dashboard" element={<LandingPageAdmin />} />
         <Route path="/user/home" element={<LandingPageUser />} />
+        <Route path="/konfirmasi" element={<KonfirmasiPermintaan />} />
       </Routes>
     </Router>
   );

@@ -44,7 +44,7 @@ function AddKategoriForm() {
             <FaFolderPlus /> Tambah Kategori
           </h2>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-6 ">
             <div>
               <label htmlFor="nama" className="block text-sm text-gray-700 mb-1">
                 Nama Kategori
@@ -55,7 +55,7 @@ function AddKategoriForm() {
                 value={nama}
                 onChange={(e) => setNama(e.target.value)}
                 placeholder="Contoh: Fiksi, Teknologi, Edukasi"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                className="w-[400px] px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-400"
                 required
               />
             </div>

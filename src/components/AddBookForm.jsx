@@ -16,7 +16,7 @@ function AddBookForm({ onSuccess }) {
       pengarang,
       penerbit,
       tahunTerbit: parseInt(tahunTerbit),
-      jumlahBuku : parseInt(jumlahBuku)
+      jumlahBuku: parseInt(jumlahBuku)
     };
     try {
       const res = await fetch("http://localhost:3000/buku", {

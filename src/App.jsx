@@ -9,6 +9,8 @@ import BukuKategoriPage from "./pages/BukuKategoriPage";
 import LandingPageAdmin from "./pages/LandingPageAdmin";
 import LandingPageUser from "./pages/LandingPageUser";
 import KonfirmasiPermintaan from "./components/KonfirmasiPermintaan";
+import DelUpBook from "./components/DelUpBook";
+import Riwayat from "./components/Riwayat";
 function App() {
   return (
     <Router>
@@ -24,6 +26,7 @@ function App() {
         <Route path="/admin/dashboard" element={<LandingPageAdmin />} />
         <Route path="/user/home" element={<LandingPageUser />} />
         <Route path="/konfirmasi" element={<KonfirmasiPermintaan />} />
+        <Route path="/riwayat" element={<Riwayat />} />
       </Routes>
     </Router>
   );

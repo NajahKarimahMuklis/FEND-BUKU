@@ -10,13 +10,16 @@ function Riwayat() {
 
   const fetchRiwayat = async () => {
     try {
-      const res = await fetch("https://be-appbuku-production-6cfd.up.railway.app/peminjaman/riwayat", {
-        method: "GET",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+      const res = await fetch(
+        "https://be-appbuku-production-6cfd.up.railway.app/peminjaman/riwayat",
+        {
+          method: "GET",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json"
+          }
+        }
+      );
 
       const body = await res.json();
       if (res.ok) {
@@ -29,7 +32,9 @@ function Riwayat() {
 
   return (
     <div className="max-w-5xl mx-auto p-6">
-      <h1 className="text-2xl font-semibold text-emerald-700 mb-6">📚 Riwayat Peminjaman</h1>
+      <h1 className="text-2xl font-semibold text-emerald-700 mb-6">
+        📚 Riwayat Peminjaman
+      </h1>
 
       {riwayat.length === 0 ? (
         <p className="text-gray-500">Belum ada riwayat peminjaman.</p>
@@ -59,7 +64,7 @@ function Riwayat() {
                   {new Date(item.createdAt).toLocaleDateString("id-ID", {
                     day: "numeric",
                     month: "short",
-                    year: "numeric",
+                    year: "numeric"
                   })}
                 </p>
               </div>
@@ -67,25 +72,27 @@ function Riwayat() {
               <div className="space-y-2">
                 <p className="text-gray-700 flex items-center gap-2">
                   <FaUser className="text-emerald-500" />
-                  <span className="font-semibold">Peminjam:</span> {item.user?.name}
+                  <span className="font-semibold">Peminjam:</span>{" "}
+                  {item.user?.name}
                 </p>
 
                 <p className="text-gray-700 flex items-center gap-2">
                   <FaBook className="text-emerald-500" />
-                  <span className="font-semibold">Judul Buku:</span> {item.eksemplar?.buku?.judul}
+                  <span className="font-semibold">Judul Buku:</span>{" "}
+                  {item.eksemplar?.buku?.judul}
                 </p>
 
                 <p className="text-gray-700">
-                  <span className="font-semibold">Kode Eksemplar:</span> {item.eksemplar?.kodeEksemplar}
+                  <span className="font-semibold">Kode Eksemplar:</span>{" "}
+                  {item.eksemplar?.kodeEksemplar}
                 </p>
-
 
                 <p className="text-gray-700">
                   <span className="font-semibold">Tanggal Kembali:</span>{" "}
                   {new Date(item.tanggalKembali).toLocaleDateString("id-ID", {
                     day: "numeric",
                     month: "short",
-                    year: "numeric",
+                    year: "numeric"
                   })}
                 </p>
               </div>

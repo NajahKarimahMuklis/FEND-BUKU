@@ -9,7 +9,7 @@ function AddStatusFrom() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch("http://localhost:3000/statusBuku", {
+      const res = await fetch("https://be-appbuku-production-6cfd.up.railway.app/statusBuku", {
         method: "POST",
         credentials: "include",
         headers: {

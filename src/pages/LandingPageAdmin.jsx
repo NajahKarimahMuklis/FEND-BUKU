@@ -14,13 +14,15 @@ import {
   FaListUl, // Ikon untuk Daftar Buku
   FaThLarge, // Ikon untuk Daftar Kategori
   FaCheckCircle, // Ikon untuk status Tersedia
-  FaRegClock // Ikon untuk status Dipinjam
+  FaRegClock, // Ikon untuk status Dipinjam
+  FaHistory
 } from "react-icons/fa";
 import { useNavigate } from "react-router";
 import AddBookForm from "../components/AddBookForm";
 import AddBukuKatForm from "../components/AddBukuKatForm";
 import AddKategoriForm from "../components/AddKategoriForm";
 import KonfirmasiPermintaan from "../components/KonfirmasiPermintaan";
+import Riwayat from "../components/Riwayat";
 
 function LandingPageAdmin() {
   const [adminName, setAdminName] = useState("");
@@ -123,7 +125,7 @@ function LandingPageAdmin() {
       if (!sudahAmbilBuku) {
         try {
           const res = await fetchDataWithAuth(
-            "http://localhost:3000/eksemplarBuku"
+            "https://be-appbuku-production-6cfd.up.railway.app/eksemplarBuku"
           );
           // fetchDataWithAuth throws on 401, so res should be valid if we reach here
           const data = await res.json(); 
@@ -149,7 +151,7 @@ function LandingPageAdmin() {
       setTampilBuku(false);
       if (!sudahAmbilKategori) {
         try {
-          const res = await fetchDataWithAuth("http://localhost:3000/kategori");
+          const res = await fetchDataWithAuth("https://be-appbuku-production-6cfd.up.railway.app/kategori");
           // fetchDataWithAuth throws on 401, so res should be valid
           const data = await res.json();
           if (res.ok) {
@@ -229,7 +231,8 @@ function LandingPageAdmin() {
               { label: "Kelola Buku", icon: <FaBook />, id: "buku", color: "text-rose-300" },
               { label: "Kelola Kategori", icon: <FaFolder />, id: "kategori", color: "text-amber-300" },
               { label: "Buku Kategori", icon: <FaUserFriends />, id: "BukuKategori", color: "text-fuchsia-300" },
-              { label: "Konfirmasi", icon: <FaCheck />, id: "Konfirmasi", color: "text-lime-300" }
+              { label: "Konfirmasi", icon: <FaCheck />, id: "Konfirmasi", color: "text-lime-300" },
+              { label: "Riwayat", icon: <FaHistory className="text-orange-400" />, id: "Riwayat", color: "text-lime-300" }
             ].map((item) => (
               <button
                 key={item.id}
@@ -461,6 +464,7 @@ function LandingPageAdmin() {
             {active === "kategori" && <AddKategoriForm globalApiConfig={globalApiConfig} onSuccess={() => { console.log("Kategori Form sukses"); setSudahAmbilKategori(false); }}/>}
             {active === "BukuKategori" && <AddBukuKatForm globalApiConfig={globalApiConfig} />}
             {active === "Konfirmasi" && <KonfirmasiPermintaan globalApiConfig={globalApiConfig} />}
+            {active === "Riwayat" && <Riwayat />}
           </div>
         )}
       </div>

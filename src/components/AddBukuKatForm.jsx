@@ -11,7 +11,7 @@ function AddBukuKatForm() {
   useEffect(() => {
     const fetchBuku = async () => {
       try {
-        const res = await fetch("http://localhost:3000/buku", {
+        const res = await fetch("https://be-appbuku-production-6cfd.up.railway.app/buku", {
           method: "GET",
           credentials: "include"
         });
@@ -32,7 +32,7 @@ function AddBukuKatForm() {
   useEffect(() => {
     const fetchKategori = async () => {
       try {
-        const res = await fetch("http://localhost:3000/kategori", {
+        const res = await fetch("https://be-appbuku-production-6cfd.up.railway.app/kategori", {
           method: "GET",
           credentials: "include"
         });
@@ -57,28 +57,27 @@ function AddBukuKatForm() {
 
       kategoriId: parseInt(kategoriId)
     };
-   try {
-  const res = await fetch("http://localhost:3000/bukuKategori", {
-    method: "POST",
-    credentials: "include",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(bukuKategoriBaru)
-  });
-  const data = await res.json();
-  if (res.ok) {
-    alert("Buku kategori berhasil ditambahkan!");
-    setIdBuku(""); // Reset dengan string kosong
-    setKategoriId(""); // Reset dengan string kosong
-    console.log("Buku kategori berhasil ditambahkan:", data);
-    setSukses(true);
-  } else {
-    alert("Gagal: " + (data.message || JSON.stringify(data)));
-  }
-} catch (error) {
-  console.error("POST error:", error);
-  alert("Terjadi error saat mengirim data");
-}
-
+    try {
+      const res = await fetch("https://be-appbuku-production-6cfd.up.railway.app/bukuKategori", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(bukuKategoriBaru)
+      });
+      const data = await res.json();
+      if (res.ok) {
+        alert("Buku kategori berhasil ditambahkan!");
+        setIdBuku();
+        setKategoriId();
+        console.log("Buku kategori berhasil ditambahkan:", data);
+        setSukses(true);
+      } else {
+        alert("Gagal: " + (data.message || JSON.stringify(data)));
+      }
+    } catch (error) {
+      console.error("POST error:", error);
+      alert("Terjadi error saat mengirim data");
+    }
   };
 
   return (

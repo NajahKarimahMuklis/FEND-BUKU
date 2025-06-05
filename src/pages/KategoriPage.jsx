@@ -13,7 +13,7 @@ const KategoriPage = () => {
   const fetchKategori = async () => {
     setLoading(true);
     try {
-      const response = await fetch("http://localhost:3000/kategori", {
+      const response = await fetch("https://be-appbuku-production-6cfd.up.railway.app/kategori", {
         credentials: "include",
       });
       const data = await response.json();
@@ -46,7 +46,7 @@ const KategoriPage = () => {
     }
 
     try {
-      const response = await fetch("http://localhost:3000/kategori", {
+      const response = await fetch("https://be-appbuku-production-6cfd.up.railway.app/kategori", {
         method: "POST",
         credentials: "include",
         headers: {
@@ -76,7 +76,7 @@ const KategoriPage = () => {
 
     setLoading(true);
     try {
-      const response = await fetch(`http://localhost:3000/kategori/${id}`, {
+      const response = await fetch(`https://be-appbuku-production-6cfd.up.railway.app/kategori/${id}`, {
         method: "DELETE",
         credentials: "include",
       });
@@ -112,7 +112,7 @@ const KategoriPage = () => {
 
     try {
       const response = await fetch(
-        `http://localhost:3000/kategori/${editKategoriId}`,
+        `https://be-appbuku-production-6cfd.up.railway.app/kategori/${editKategoriId}`,
         {
           method: "PUT",
           credentials: "include",

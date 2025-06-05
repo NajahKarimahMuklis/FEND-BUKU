@@ -54,7 +54,8 @@ function AddBukuKatForm() {
     e.preventDefault();
     const bukuKategoriBaru = {
       idBuku: parseInt(idBuku),
-      kategoriId: parseInt(kategoriId) 
+
+      kategoriId: parseInt(kategoriId)
     };
     try {
       const res = await fetch("https://be-appbuku-production-6cfd.up.railway.app/bukuKategori", {

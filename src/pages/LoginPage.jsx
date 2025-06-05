@@ -1,5 +1,5 @@
 import bgImage from "../assets/bg-login.png";
-import logo from "/logo.png";
+import logo from "../assets/logo.png";
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -33,19 +33,16 @@ function LoginPage() {
         return;
       }
 
-      if (res.ok) {
-        setMessage(data.message);
-        document.cookie = `token=${data.token}; path=/; max-age=3600`;
-        console.log("Token disimpan:", document.cookie);
-        localStorage.setItem("adminName", data.data.email);
-        localStorage.setItem("userName", data.data.email);
+      setMessage(data.message);
+      document.cookie = `token=${data.token}; path=/; max-age=3600`;
+      localStorage.setItem("adminName", data.data.email);
+      localStorage.setItem("userName", data.data.email);
 
-        const role = data.data.role;
-        if (role === "ADMIN") {
-          navigate("/admin/dashboard");
-        } else {
-          navigate("/user/home");
-        }
+      const role = data.data.role;
+      if (role === "ADMIN") {
+        navigate("/admin/dashboard");
+      } else {
+        navigate("/user/home");
       }
     } catch (error) {
       console.error("Error:", error);
@@ -173,7 +170,7 @@ function LoginPage() {
               <Link to="/register">
                 <button
                   type="button"
-                  className="w-full sm:w-40 text-emerald-900 border border-emerald-800 py-2 rounded-md hover:bg-emerald-700 hover:text-white transition text-lg "
+                  className="w-full sm:w-40 text-emerald-900 border border-emerald-800 py-2 rounded-md hover:bg-emerald-700 hover:text-white transition text-lg"
                 >
                   Daftar
                 </button>

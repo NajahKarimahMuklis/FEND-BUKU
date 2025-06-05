@@ -179,7 +179,7 @@ function LandingPageAdmin() {
       transition={{ duration: 0.4, ease: "circOut" }}
       onClick={onClick}
       className={`bg-gradient-to-br ${gradientFrom} ${gradientTo} p-6 rounded-2xl shadow-xl hover:shadow-2xl transition-all cursor-pointer text-white min-h-[180px] flex flex-col justify-between`}
-    >
+      >
       <div>
         <div className={`mb-3 text-4xl ${textColor} opacity-80`}>{icon}</div>
         <h2 className={`text-xl font-bold ${textColor}`}>{title}</h2>

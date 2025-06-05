@@ -11,7 +11,7 @@ function AddKategoriForm() {
     setLoading(true);
     setSukses(false);
     try {
-      const res = await fetch("http://localhost:3000/kategori", {
+      const res = await fetch("https://be-appbuku-production-6cfd.up.railway.app/kategori", {
         method: "POST",
         credentials: "include",
         headers: {

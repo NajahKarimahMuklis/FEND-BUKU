@@ -78,7 +78,7 @@ const UpdateBookForm = ({ book, categories, globalApiConfig, onUpdateSuccess, on
     };
 
     try {
-      const response = await fetchDataWithAuth(`http://localhost:3000/buku/${book.bukuId}`, {
+      const response = await fetchDataWithAuth(`https://be-appbuku-production-6cfd.up.railway.app/buku/${book.bukuId}`, {
         method: "PUT",
         body: JSON.stringify(payload),
       });
@@ -298,7 +298,7 @@ function ManageBooks({ globalApiConfig, refreshBooks, eksemplarBuku, kategori })
     }
 
     try {
-      const response = await fetchDataWithAuth(`http://localhost:3000/buku/${bukuId}`, {
+      const response = await fetchDataWithAuth(`https://be-appbuku-production-6cfd.up.railway.app/buku/${bukuId}`, {
         method: "DELETE",
       });
 

@@ -11,7 +11,7 @@ function AddBukuKatForm() {
   useEffect(() => {
     const fetchBuku = async () => {
       try {
-        const res = await fetch("http://localhost:3000/buku", {
+        const res = await fetch("https://be-appbuku-production-6cfd.up.railway.app/buku", {
           method: "GET",
           credentials: "include"
         });
@@ -32,7 +32,7 @@ function AddBukuKatForm() {
   useEffect(() => {
     const fetchKategori = async () => {
       try {
-        const res = await fetch("http://localhost:3000/kategori", {
+        const res = await fetch("https://be-appbuku-production-6cfd.up.railway.app/kategori", {
           method: "GET",
           credentials: "include"
         });
@@ -57,7 +57,7 @@ function AddBukuKatForm() {
       kategoriId: parseInt(kategoriId) 
     };
     try {
-      const res = await fetch("http://localhost:3000/bukuKategori", {
+      const res = await fetch("https://be-appbuku-production-6cfd.up.railway.app/bukuKategori", {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },

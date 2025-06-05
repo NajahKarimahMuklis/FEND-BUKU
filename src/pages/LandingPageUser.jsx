@@ -7,7 +7,7 @@ function LandingPageUser() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetch("http://localhost:3000/buku", {
+    fetch("https://be-appbuku-production-6cfd.up.railway.app/buku", {
       credentials: "include",
     })
       .then((res) => res.json())

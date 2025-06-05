@@ -14,14 +14,17 @@ function LoginPage() {
     e.preventDefault();
 
     try {
-      const res = await fetch("http://localhost:3000/login", {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ email, password })
-      });
+      const res = await fetch(
+        "https://be-appbuku-production-6cfd.up.railway.app/login",
+        {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ email, password })
+        }
+      );
 
       const data = await res.json();
 
@@ -53,7 +56,6 @@ function LoginPage() {
   return (
     <div className="relative overflow-hidden min-h-screen raleway-general">
       <img
-      
         src={bgImage}
         alt="Background"
         className="absolute w-full h-full object-cover -z-10"

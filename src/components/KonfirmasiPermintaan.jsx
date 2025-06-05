@@ -41,7 +41,7 @@ function KonfirmasiPermintaan({ globalApiConfig }) {
     const options = globalApiConfig ? {} : { method: "GET", credentials: "include" };
 
     try {
-      const res = await fetchFn("http://localhost:3000/peminjaman/permintaan", options);
+      const res = await fetchFn("https://be-appbuku-production-6cfd.up.railway.app/peminjaman/permintaan", options);
       
       if (!globalApiConfig && res.status === 401) {
         console.error("Sesi mungkin kedaluwarsa.");
@@ -124,19 +124,19 @@ function KonfirmasiPermintaan({ globalApiConfig }) {
 
   const handleTerimaPeminjaman = createActionHandler(
     "terima peminjaman", "Peminjaman berhasil disetujui!", "Gagal menyetujui peminjaman",
-    (id) => `http://localhost:3000/peminjaman/konfirmasi/${id}`
+    (id) => `https://be-appbuku-production-6cfd.up.railway.app/peminjaman/konfirmasi/${id}`
   );
   const handleTolakPeminjaman = createActionHandler(
     "tolak peminjaman", "Peminjaman berhasil ditolak!", "Gagal menolak peminjaman",
-    (id) => `http://localhost:3000/peminjaman/tolak/${id}`
+    (id) => `https://be-appbuku-production-6cfd.up.railway.app/peminjaman/tolak/${id}`
   );
   const handleTerimaPengembalian = createActionHandler(
     "terima pengembalian", "Pengembalian berhasil disetujui!", "Gagal menyetujui pengembalian",
-    (id) => `http://localhost:3000/peminjaman/konfirmasi-kembali/${id}`
+    (id) => `https://be-appbuku-production-6cfd.up.railway.app/peminjaman/konfirmasi-kembali/${id}`
   );
   const handleTolakPengembalian = createActionHandler(
     "tolak pengembalian", "Pengembalian berhasil ditolak!", "Gagal menolak pengembalian",
-    (id) => `http://localhost:3000/peminjaman/tolak-kembali/${id}` 
+    (id) => `https://be-appbuku-production-6cfd.up.railway.app/peminjaman/tolak-kembali/${id}` 
   );
 
   const Card = ({ data, type }) => {

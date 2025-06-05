@@ -19,7 +19,7 @@ function AddBookForm({ onSuccess }) {
       jumlahBuku: parseInt(jumlahBuku)
     };
     try {
-      const res = await fetch("http://localhost:3000/buku", {
+      const res = await fetch("https://be-appbuku-production-6cfd.up.railway.app/buku", {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },

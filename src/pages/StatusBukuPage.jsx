@@ -12,9 +12,12 @@ const StatusBukuPage = () => {
   const fetchStatus = async () => {
     setLoading(true);
     try {
-      const response = await fetch("http://localhost:3000/statusBuku", {
-        credentials: "include",
-      });
+      const response = await fetch(
+        "https://be-appbuku-production-6cfd.up.railway.app/statusBuku",
+        {
+          credentials: "include"
+        }
+      );
       const data = await response.json();
       if (response.ok) {
         setStatusList(data.data);
@@ -44,14 +47,17 @@ const StatusBukuPage = () => {
     }
 
     try {
-      const response = await fetch("http://localhost:3000/statusBuku", {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ nama: newStatus })
-      });
+      const response = await fetch(
+        "https://be-appbuku-production-6cfd.up.railway.app/statusBuku",
+        {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ nama: newStatus })
+        }
+      );
 
       const data = await response.json();
       if (response.ok) {
@@ -74,10 +80,13 @@ const StatusBukuPage = () => {
 
     setLoading(true);
     try {
-      const response = await fetch(`http://localhost:3000/statusBuku/${id}`, {
-        method: "DELETE",
-        credentials: "include",
-      });
+      const response = await fetch(
+        `https://be-appbuku-production-6cfd.up.railway.app/statusBuku/${id}`,
+        {
+          method: "DELETE",
+          credentials: "include"
+        }
+      );
 
       const data = await response.json();
       if (response.ok) {
@@ -110,7 +119,7 @@ const StatusBukuPage = () => {
 
     try {
       const response = await fetch(
-        `http://localhost:3000/statusBuku/${editStatusId}`,
+        `https://be-appbuku-production-6cfd.up.railway.app/statusBuku/${editStatusId}`,
         {
           method: "PUT",
           credentials: "include",

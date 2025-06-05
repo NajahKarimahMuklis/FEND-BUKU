@@ -34,7 +34,7 @@ function DelUpBook() {
     setShowConfirmModal(false); // Tutup modal konfirmasi
     
     try {
-      const response = await fetch(`http://localhost:3000/buku/${bookToDelete.id}`, {
+      const response = await fetch(`https://be-appbuku-production-6cfd.up.railway.app/buku/${bookToDelete.id}`, {
         method: "DELETE",
         credentials: "include",
         headers: {
@@ -69,7 +69,7 @@ function DelUpBook() {
   useEffect(() => {
     const fetchBuku = async () => {
       try {
-        const response = await fetch("http://localhost:3000/buku", {
+        const response = await fetch("https://be-appbuku-production-6cfd.up.railway.app/buku", {
           method: "GET",
           credentials: "include",
           headers: {

@@ -125,7 +125,7 @@ function LandingPageAdmin() {
       if (!sudahAmbilBuku) {
         try {
           const res = await fetchDataWithAuth(
-            "http://localhost:3000/eksemplarBuku"
+            "https://be-appbuku-production-6cfd.up.railway.app/eksemplarBuku"
           );
           // fetchDataWithAuth throws on 401, so res should be valid if we reach here
           const data = await res.json(); 
@@ -151,7 +151,7 @@ function LandingPageAdmin() {
       setTampilBuku(false);
       if (!sudahAmbilKategori) {
         try {
-          const res = await fetchDataWithAuth("http://localhost:3000/kategori");
+          const res = await fetchDataWithAuth("https://be-appbuku-production-6cfd.up.railway.app/kategori");
           // fetchDataWithAuth throws on 401, so res should be valid
           const data = await res.json();
           if (res.ok) {

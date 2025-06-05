@@ -16,14 +16,14 @@ function AddBookForm({ onSuccess }) {
       pengarang,
       penerbit,
       tahunTerbit: parseInt(tahunTerbit),
-      jumlahBuku : parseInt(jumlahBuku)
+      jumlahBuku: parseInt(jumlahBuku),
     };
     try {
       const res = await fetch("http://localhost:3000/buku", {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(bukuBaru)
+        body: JSON.stringify(bukuBaru),
       });
       const data = await res.json();
       if (res.ok) {
@@ -31,7 +31,7 @@ function AddBookForm({ onSuccess }) {
         setJudul("");
         setPengarang("");
         setPenerbit("");
-        setTahunTerbit("");
+        setTahunTerbit();
         setJumlahBuku("");
         onSuccess?.();
       } else {

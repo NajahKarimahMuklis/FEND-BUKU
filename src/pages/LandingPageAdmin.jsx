@@ -14,13 +14,17 @@ import {
   FaListUl, // Ikon untuk Daftar Buku
   FaThLarge, // Ikon untuk Daftar Kategori
   FaCheckCircle, // Ikon untuk status Tersedia
-  FaRegClock // Ikon untuk status Dipinjam
+  FaRegClock, // Ikon untuk status Dipinjam
+  FaHistory,
+  FaTrash, // Ikon untuk delete
+  FaTimes, // Ikon untuk close modal
 } from "react-icons/fa";
 import { useNavigate } from "react-router";
 import AddBookForm from "../components/AddBookForm";
 import AddBukuKatForm from "../components/AddBukuKatForm";
 import AddKategoriForm from "../components/AddKategoriForm";
 import KonfirmasiPermintaan from "../components/KonfirmasiPermintaan";
+import Riwayat from "../components/Riwayat";
 
 function LandingPageAdmin() {
   const [adminName, setAdminName] = useState("");
@@ -40,29 +44,25 @@ function LandingPageAdmin() {
   useEffect(() => {
     const adminNameFromStorage = localStorage.getItem("adminName");
     setAdminName(adminNameFromStorage);
-    // Consider initial redirect if no token/adminName, ensure this logic is sound for your app's flow.
-    // if (!adminNameFromStorage && !document.cookie.includes("token=")) {
-    //   navigate("/login");
-    // }
-  }, []); 
+  }, []);
 
   const tableVariants = {
     hidden: { opacity: 0 },
-    visible: { opacity: 1, transition: { staggerChildren: 0.03 } }
+    visible: { opacity: 1, transition: { staggerChildren: 0.03 } },
   };
   const rowVariants = {
     hidden: { opacity: 0, y: 15 },
     visible: {
       opacity: 1,
       y: 0,
-      transition: { duration: 0.25, ease: "easeOut" }
-    }
+      transition: { duration: 0.25, ease: "easeOut" },
+    },
   };
 
   const handleSessionExpired = () => {
     document.cookie = "token=; Max-Age=0; path=/;";
     localStorage.removeItem("adminName");
-    setAdminName(""); 
+    setAdminName("");
     setShowTokenExpiryPopup(true);
     setTimeout(() => {
       setShowTokenExpiryPopup(false);
@@ -80,20 +80,20 @@ function LandingPageAdmin() {
       credentials: "include",
       headers: {
         "Content-Type": "application/json",
-        ...options.headers
+        ...options.headers,
       },
-      ...options
+      ...options,
     };
 
     const response = await fetch(url, defaultOptions);
 
     if (response.status === 401) {
       handleSessionExpired();
-      throw new Error("Sesi kedaluwarsa"); 
+      throw new Error("Sesi kedaluwarsa");
     }
     return response;
   };
-  
+
   useEffect(() => {
     let hasilFilter = [...eksemplarBuku];
     if (query) {
@@ -123,10 +123,10 @@ function LandingPageAdmin() {
       if (!sudahAmbilBuku) {
         try {
           const res = await fetchDataWithAuth(
-            "http://localhost:3000/eksemplarBuku"
+            "https://be-appbuku-production-6cfd.up.railway.app/eksemplarBuku"
           );
           // fetchDataWithAuth throws on 401, so res should be valid if we reach here
-          const data = await res.json(); 
+          const data = await res.json();
           if (res.ok) {
             setEksemplarBuku(data.data || []);
             setSudahAmbilBuku(true);
@@ -149,7 +149,9 @@ function LandingPageAdmin() {
       setTampilBuku(false);
       if (!sudahAmbilKategori) {
         try {
-          const res = await fetchDataWithAuth("http://localhost:3000/kategori");
+          const res = await fetchDataWithAuth(
+            "https://be-appbuku-production-6cfd.up.railway.app/kategori"
+          );
           // fetchDataWithAuth throws on 401, so res should be valid
           const data = await res.json();
           if (res.ok) {
@@ -167,9 +169,64 @@ function LandingPageAdmin() {
     }
   };
 
+  // Fungsi delete
+  const handleDeleteBuku = async (bukuId, judulBuku) => {
+    if (confirm(`Yakin mau hapus buku "${judulBuku}"?`)) {
+      try {
+        const response = await fetchDataWithAuth(
+          `https://be-appbuku-production-6cfd.up.railway.app/buku/${bukuId}`,
+          {
+            method: "DELETE",
+          }
+        );
+        if (response.ok) {
+          alert("Buku berhasil dihapus!");
+          setSudahAmbilBuku(false);
+          handleKlikEksemplar();
+        } else {
+          alert("Gagal menghapus buku");
+        }
+      } catch (error) {
+        console.error("Error:", error);
+        alert("Terjadi kesalahan");
+      }
+    }
+  };
+
+  const handleDeleteEksemplar = async (eksemplarId, kodeEksemplar) => {
+    if (confirm(`Yakin mau hapus eksemplar "${kodeEksemplar}"?`)) {
+      try {
+        const res = await fetchDataWithAuth(
+          `https://be-appbuku-production-6cfd.up.railway.app/eksemplarBuku/${eksemplarId}`,
+          {
+            method: "DELETE",
+          }
+        );
+        if (res.ok) {
+          alert("Eksemplar berhasil dihapus!");
+          setSudahAmbilBuku(false);
+          handleKlikEksemplar();
+        } else {
+          alert("Gagal menghapus eksemplar");
+        }
+      } catch (error) {
+        console.error("Error:", error);
+        alert("Terjadi kesalahan");
+      }
+    }
+  };
+
   const globalApiConfig = { fetchDataWithAuth, handleSessionExpired };
 
-  const DashboardCard = ({ icon, title, description, onClick, gradientFrom, gradientTo, textColor }) => (
+  const DashboardCard = ({
+    icon,
+    title,
+    description,
+    onClick,
+    gradientFrom,
+    gradientTo,
+    textColor,
+  }) => (
     <motion.div
       whileHover={{ scale: 1.03, y: -5 }}
       initial={{ opacity: 0, y: 20 }}
@@ -177,7 +234,7 @@ function LandingPageAdmin() {
       transition={{ duration: 0.4, ease: "circOut" }}
       onClick={onClick}
       className={`bg-gradient-to-br ${gradientFrom} ${gradientTo} p-6 rounded-2xl shadow-xl hover:shadow-2xl transition-all cursor-pointer text-white min-h-[180px] flex flex-col justify-between`}
-      >
+    >
       <div>
         <div className={`mb-3 text-4xl ${textColor} opacity-80`}>{icon}</div>
         <h2 className={`text-xl font-bold ${textColor}`}>{title}</h2>
@@ -197,9 +254,12 @@ function LandingPageAdmin() {
             className="bg-white p-8 rounded-xl shadow-2xl text-center max-w-md mx-4"
           >
             <FaExclamationTriangle className="text-7xl text-yellow-500 mx-auto mb-6" />
-            <h3 className="text-2xl font-bold text-slate-800 mb-3">Sesi Kedaluwarsa</h3>
+            <h3 className="text-2xl font-bold text-slate-800 mb-3">
+              Sesi Kedaluwarsa
+            </h3>
             <p className="text-slate-600 mb-6">
-              Sesi Anda telah berakhir. Anda akan dialihkan ke halaman login secara otomatis.
+              Sesi Anda telah berakhir. Anda akan dialihkan ke halaman login
+              secara otomatis.
             </p>
             <div className="w-full bg-gray-200 rounded-full h-2.5 mb-4 overflow-hidden">
               <motion.div
@@ -225,11 +285,42 @@ function LandingPageAdmin() {
           </h2>
           <nav className="flex flex-col gap-1 p-3">
             {[
-              { label: "Dashboard", icon: <FaHome />, id: "dashboard", color: "text-sky-300" },
-              { label: "Kelola Buku", icon: <FaBook />, id: "buku", color: "text-rose-300" },
-              { label: "Kelola Kategori", icon: <FaFolder />, id: "kategori", color: "text-amber-300" },
-              { label: "Buku Kategori", icon: <FaUserFriends />, id: "BukuKategori", color: "text-fuchsia-300" },
-              { label: "Konfirmasi", icon: <FaCheck />, id: "Konfirmasi", color: "text-lime-300" }
+              {
+                label: "Dashboard",
+                icon: <FaHome />,
+                id: "dashboard",
+                color: "text-sky-300",
+              },
+              {
+                label: "Kelola Buku",
+                icon: <FaBook />,
+                id: "buku",
+                color: "text-rose-300",
+              },
+              {
+                label: "Kelola Kategori",
+                icon: <FaFolder />,
+                id: "kategori",
+                color: "text-amber-300",
+              },
+              {
+                label: "Buku Kategori",
+                icon: <FaUserFriends />,
+                id: "BukuKategori",
+                color: "text-fuchsia-300",
+              },
+              {
+                label: "Konfirmasi",
+                icon: <FaCheck />,
+                id: "Konfirmasi",
+                color: "text-lime-300",
+              },
+              {
+                label: "Riwayat",
+                icon: <FaHistory className="text-orange-400" />,
+                id: "Riwayat",
+                color: "text-lime-300",
+              },
             ].map((item) => (
               <button
                 key={item.id}
@@ -238,7 +329,9 @@ function LandingPageAdmin() {
                   active === item.id ? "bg-emerald-600 shadow-inner" : ""
                 }`}
               >
-                <span className={`w-6 h-6 flex items-center justify-center mr-3 ${item.color}`}>
+                <span
+                  className={`w-6 h-6 flex items-center justify-center mr-3 ${item.color}`}
+                >
                   {item.icon}
                 </span>
                 <span className="font-medium text-sm">{item.label}</span>
@@ -355,9 +448,19 @@ function LandingPageAdmin() {
                     <thead className="bg-slate-100">
                       <tr>
                         {[
-                          "Kode", "Judul Buku", "Kategori", "Pengarang", "Penerbit", "Tahun", "Status"
+                          "Kode",
+                          "Judul Buku",
+                          "Kategori",
+                          "Pengarang",
+                          "Penerbit",
+                          "Tahun",
+                          "Status",
+                          "Aksi",
                         ].map((head) => (
-                          <th key={head} className="px-5 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                          <th
+                            key={head}
+                            className="px-5 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider"
+                          >
                             {head}
                           </th>
                         ))}
@@ -371,20 +474,42 @@ function LandingPageAdmin() {
                             variants={rowVariants}
                             className="hover:bg-slate-50 transition-colors"
                           >
-                            <td className="px-5 py-4 whitespace-nowrap font-mono text-xs text-slate-600">{bukus.kodeEksemplar}</td>
-                            <td className="px-5 py-4 whitespace-nowrap font-medium text-slate-800 max-w-xs truncate" title={bukus.buku?.judul}>
+                            <td className="px-5 py-4 whitespace-nowrap font-mono text-xs text-slate-600">
+                              {bukus.kodeEksemplar}
+                            </td>
+                            <td
+                              className="px-5 py-4 whitespace-nowrap font-medium text-slate-800 max-w-xs truncate"
+                              title={bukus.buku?.judul}
+                            >
                               {bukus.buku?.judul}
                             </td>
-                            <td className="px-5 py-4 whitespace-nowrap text-slate-600 text-xs max-w-xs truncate" title={bukus.buku?.kategori?.map((k) => k.kategori?.nama).join(", ") || "-"}>
-                              {bukus.buku?.kategori?.map((k) => k.kategori?.nama).join(", ") || "-"}
+                            <td
+                              className="px-5 py-4 whitespace-nowrap text-slate-600 text-xs max-w-xs truncate"
+                              title={
+                                bukus.buku?.kategori
+                                  ?.map((k) => k.kategori?.nama)
+                                  .join(", ") || "-"
+                              }
+                            >
+                              {bukus.buku?.kategori
+                                ?.map((k) => k.kategori?.nama)
+                                .join(", ") || "-"}
                             </td>
-                            <td className="px-5 py-4 whitespace-nowrap text-slate-600 max-w-xs truncate" title={bukus.buku?.pengarang}>
+                            <td
+                              className="px-5 py-4 whitespace-nowrap text-slate-600 max-w-xs truncate"
+                              title={bukus.buku?.pengarang}
+                            >
                               {bukus.buku?.pengarang}
                             </td>
-                            <td className="px-5 py-4 whitespace-nowrap text-slate-600 max-w-xs truncate" title={bukus.buku?.penerbit}>
+                            <td
+                              className="px-5 py-4 whitespace-nowrap text-slate-600 max-w-xs truncate"
+                              title={bukus.buku?.penerbit}
+                            >
                               {bukus.buku?.penerbit}
                             </td>
-                            <td className="px-5 py-4 whitespace-nowrap text-slate-600">{bukus.buku?.tahunTerbit}</td>
+                            <td className="px-5 py-4 whitespace-nowrap text-slate-600">
+                              {bukus.buku?.tahunTerbit}
+                            </td>
                             <td className="px-5 py-4 whitespace-nowrap">
                               <span
                                 className={`px-2.5 py-1 inline-flex items-center text-xs font-semibold rounded-full capitalize ${
@@ -393,15 +518,50 @@ function LandingPageAdmin() {
                                     : "bg-yellow-100 text-yellow-700"
                                 }`}
                               >
-                                {bukus.status?.toLowerCase() === "tersedia" ? <FaCheckCircle className="mr-1.5" /> : <FaRegClock className="mr-1.5" />}
+                                {bukus.status?.toLowerCase() === "tersedia" ? (
+                                  <FaCheckCircle className="mr-1.5" />
+                                ) : (
+                                  <FaRegClock className="mr-1.5" />
+                                )}
                                 {bukus.status}
                               </span>
+                            </td>
+                            <td className="px-5 py-4 whitespace-nowrap">
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={() =>
+                                    handleDeleteEksemplar(
+                                      bukus.id,
+                                      bukus.kodeEksemplar
+                                    )
+                                  }
+                                  className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                  title="Hapus Eksemplar"
+                                >
+                                  <FaTrash />
+                                </button>
+                                <button
+                                  onClick={() =>
+                                    handleDeleteBuku(
+                                      bukus.buku?.id,
+                                      bukus.buku?.judul
+                                    )
+                                  }
+                                  className="p-2 text-red-800 hover:bg-red-100 rounded-lg transition-colors"
+                                  title="Hapus Buku"
+                                >
+                                  <FaBook />
+                                </button>
+                              </div>
                             </td>
                           </motion.tr>
                         ))
                       ) : (
                         <tr>
-                          <td colSpan="7" className="text-center py-8 text-slate-500 italic">
+                          <td
+                            colSpan="8"
+                            className="text-center py-8 text-slate-500 italic"
+                          >
                             Tidak ada data buku yang cocok dengan filter Anda.
                           </td>
                         </tr>
@@ -435,7 +595,10 @@ function LandingPageAdmin() {
                       >
                         <div className="flex items-center mb-2">
                           <FaFolder className="text-emerald-500 mr-2.5 text-lg" />
-                          <h3 className="text-md font-semibold text-slate-800 truncate" title={item.nama}>
+                          <h3
+                            className="text-md font-semibold text-slate-800 truncate"
+                            title={item.nama}
+                          >
                             {item.nama}
                           </h3>
                         </div>
@@ -457,10 +620,31 @@ function LandingPageAdmin() {
 
         {active !== "dashboard" && (
           <div className="bg-white p-6 md:p-8 rounded-2xl shadow-xl">
-            {active === "buku" && <AddBookForm globalApiConfig={globalApiConfig} onSuccess={() => { console.log("Form buku sukses"); setSudahAmbilBuku(false); }} />}
-            {active === "kategori" && <AddKategoriForm globalApiConfig={globalApiConfig} onSuccess={() => { console.log("Kategori Form sukses"); setSudahAmbilKategori(false); }}/>}
-            {active === "BukuKategori" && <AddBukuKatForm globalApiConfig={globalApiConfig} />}
-            {active === "Konfirmasi" && <KonfirmasiPermintaan globalApiConfig={globalApiConfig} />}
+            {active === "buku" && (
+              <AddBookForm
+                globalApiConfig={globalApiConfig}
+                onSuccess={() => {
+                  console.log("Form buku sukses");
+                  setSudahAmbilBuku(false);
+                }}
+              />
+            )}
+            {active === "kategori" && (
+              <AddKategoriForm
+                globalApiConfig={globalApiConfig}
+                onSuccess={() => {
+                  console.log("Kategori Form sukses");
+                  setSudahAmbilKategori(false);
+                }}
+              />
+            )}
+            {active === "BukuKategori" && (
+              <AddBukuKatForm globalApiConfig={globalApiConfig} />
+            )}
+            {active === "Konfirmasi" && (
+              <KonfirmasiPermintaan globalApiConfig={globalApiConfig} />
+            )}
+            {active === "Riwayat" && <Riwayat />}
           </div>
         )}
       </div>

@@ -14,14 +14,17 @@ function LoginPage() {
     e.preventDefault();
 
     try {
-      const res = await fetch("http://localhost:3000/login", {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ email, password })
-      });
+      const res = await fetch(
+        "https://be-appbuku-production-6cfd.up.railway.app/login",
+        {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ email, password })
+        }
+      );
 
       const data = await res.json();
 
@@ -30,19 +33,16 @@ function LoginPage() {
         return;
       }
 
-      if (res.ok) {
-        setMessage(data.message);
-        document.cookie = `token=${data.token}; path=/; max-age=3600`;
-        console.log("Token disimpan:", document.cookie);
-        localStorage.setItem("adminName", data.data.email);
-        localStorage.setItem("userName", data.data.email);
+      setMessage(data.message);
+      document.cookie = `token=${data.token}; path=/; max-age=3600`;
+      localStorage.setItem("adminName", data.data.email);
+      localStorage.setItem("userName", data.data.email);
 
-        const role = data.data.role;
-        if (role === "ADMIN") {
-          navigate("/admin/dashboard");
-        } else {
-          navigate("/user/home");
-        }
+      const role = data.data.role;
+      if (role === "ADMIN") {
+        navigate("/admin/dashboard");
+      } else {
+        navigate("/user/home");
       }
     } catch (error) {
       console.error("Error:", error);
@@ -51,15 +51,15 @@ function LoginPage() {
   };
 
   return (
-
-    <div className="relative overflow-hidden min-h-screen raleway-general"><img
+    <div className="relative overflow-hidden min-h-screen raleway-general">
+      <img
         src={bgImage}
         alt="Background"
         className="absolute w-full h-full object-cover -z-10"
         style={{ objectPosition: "center right" }}
       />
 
-      <div className="flex flex-col lg:flex-row min-h-screen ">
+      <div className="flex flex-col lg:flex-row min-h-screen">
         {/* Left - Welcome Text */}
         <motion.div
           initial={{ opacity: 0, x: -50 }}
@@ -170,7 +170,7 @@ function LoginPage() {
               <Link to="/register">
                 <button
                   type="button"
-                  className="w-full sm:w-40 text-emerald-900 border border-emerald-800 py-2 rounded-md hover:bg-emerald-700 hover:text-white transition text-lg "
+                  className="w-full sm:w-40 text-emerald-900 border border-emerald-800 py-2 rounded-md hover:bg-emerald-700 hover:text-white transition text-lg"
                 >
                   Daftar
                 </button>

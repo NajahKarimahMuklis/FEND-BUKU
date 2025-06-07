@@ -23,14 +23,17 @@ export default function Register() {
     }
 
     try {
-      const res = await fetch("http://localhost:3000/register", {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(bodyData),
-      });
+      const res = await fetch(
+        "https://be-appbuku-production-6cfd.up.railway.app/register",
+        {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(bodyData),
+        }
+      );
 
       const data = await res.json();
 

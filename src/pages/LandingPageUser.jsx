@@ -10,19 +10,33 @@ import {
 
 function LandingPageUser() {
   const [books, setBooks] = useState([]);
+  const [eksemplarData, setEksemplarData] = useState([]);
   const [adminName, setAdminName] = useState();
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [riwayat, setRiwayat] = useState([]);
+
 
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetch("http://localhost:3000/buku", { credentials: "include" })
+    fetch("https://be-appbuku-production-6cfd.up.railway.app/buku", {
+      credentials: "include",
+    })
       .then((res) => res.json())
       .then((res) => {
         if (res?.data) setBooks(res.data);
       })
       .catch((err) => console.error("Gagal fetch buku:", err));
+
+    fetch("https://be-appbuku-production-6cfd.up.railway.app/eksemplarBuku", {
+      credentials: "include",
+    })
+      .then((res) => res.json())
+      .then((res) => {
+        if (res?.data) setEksemplarData(res.data);
+      })
+      .catch((err) => console.error("Gagal fetch eksemplar:", err));
   }, []);
 
   useEffect(() => {
@@ -40,8 +54,8 @@ function LandingPageUser() {
 
   const filteredBooks = books.filter((b) => {
     const matchesQuery = b.judul?.toLowerCase().includes(query.toLowerCase());
-    const tersediaCount =
-      b.eksemplarBuku?.filter((e) => e.status === "TERSEDIA").length || 0;
+    const terkait = eksemplarData.filter((e) => e.bukuId === b.id);
+    const tersediaCount = terkait.filter((e) => e.status === "TERSEDIA").length;
     const matchesStatus =
       statusFilter === "tersedia"
         ? tersediaCount > 0
@@ -61,42 +75,48 @@ function LandingPageUser() {
     setCurrentPage(1);
   }, [query, statusFilter]);
 
-  const handlePinjam = async (buku) => {
-    const tersediaList = buku.eksemplarBuku?.filter(
-      (e) => e.status === "TERSEDIA"
+  const handlePinjam = async (bukuId) => {
+    const tersediaList = eksemplarData.filter(
+      (e) => e.bukuId === bukuId && e.status === "TERSEDIA"
     );
-    if (!tersediaList || tersediaList.length === 0) return;
+
+    if (!tersediaList || tersediaList.length === 0) {
+      alert("Tidak ada eksemplar tersedia.");
+      return;
+    }
 
     const eksemplarId = tersediaList[0].id;
 
     try {
-      const res = await fetch("/peminjaman", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`, // sesuaikan kalau pakai context/auth state
-        },
-        body: JSON.stringify({ eksemplarId }),
-      });
+      const response = await fetch(
+        "https://be-appbuku-production-6cfd.up.railway.app/peminjaman",
+        {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ eksemplarId }),
+        }
+      );
 
-      const data = await res.json();
+      const data = await response.json();
 
-      if (!res.ok) {
+      if (!response.ok) {
         alert(data.message || "Gagal mengirim permintaan");
-        return;
-      }
+          return;
+        }
 
-      alert("Permintaan peminjaman berhasil dikirim!");
-      // opsional: refresh halaman atau re-fetch data
-    } catch (err) {
-      console.error(err);
-      alert("Terjadi kesalahan saat meminjam");
-    }
+        alert("Permintaan peminjaman berhasil dikirim!");
+      } catch (err) {
+        console.error(err);
+        alert("Terjadi kesalahan saat meminjam");
+      }
   };
   
 
   return (
-    <div className="flex h-screen bg-gray-100">
+    <div className="flex h-screen bg-gray-100 raleway-general">
       {/* Sidebar */}
       <div className="w-64 bg-emerald-800 text-white flex flex-col justify-between">
         <div>
@@ -182,10 +202,14 @@ function LandingPageUser() {
               <tbody className="bg-white divide-y divide-slate-200">
                 {paginatedBooks.length > 0 ? (
                   paginatedBooks.map((buku) => {
-                    const total = buku.eksemplarBuku?.length || 0;
-                    const tersedia =
-                      buku.eksemplarBuku?.filter((e) => e.status === "TERSEDIA")
-                        .length || 0;
+                    const terkait = eksemplarData.filter(
+                      (e) => e.bukuId === buku.id
+                    );
+                    const total = terkait.length;
+                    const tersedia = terkait.filter(
+                      (e) => e.status === "TERSEDIA"
+                    ).length;
+
                     return (
                       <tr
                         key={buku.id}
@@ -227,17 +251,21 @@ function LandingPageUser() {
                         <td className="px-5 py-4 space-y-1">
                           <span
                             className={`px-3 py-1 inline-flex text-xs font-semibold rounded-full 
-    ${
-      tersedia > 0
-        ? "bg-green-100 text-green-700"
-        : "bg-yellow-100 text-yellow-700"
-    }`}
+                              ${
+                                tersedia > 0
+                                  ? "bg-green-100 text-green-700"
+                                  : "bg-yellow-100 text-yellow-700"
+                              }`}
                           >
                             {tersedia} dari {total} tersedia
                           </span>
                           {tersedia > 0 && (
                             <button
-                              onClick={() => handlePinjam(buku)}
+                              onClick={async () => {
+                                if (confirm(`Yakin ingin meminjam buku ini?`)) {
+                                  await handlePinjam(buku.id);
+                                }
+                              }}
                               className="mt-1 block px-3 py-1.5 text-xs font-medium bg-emerald-600 text-white rounded hover:bg-emerald-500"
                             >
                               Pinjam
@@ -268,18 +296,7 @@ function LandingPageUser() {
                   disabled={currentPage === 1}
                   className="grid size-8 place-content-center rounded border border-gray-200 transition-colors hover:bg-gray-50 disabled:opacity-50"
                 >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="size-4"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
+                  ◀
                 </button>
               </li>
               <li className="text-sm font-medium tracking-wider flex items-center">
@@ -293,18 +310,7 @@ function LandingPageUser() {
                   disabled={currentPage === totalPages}
                   className="grid size-8 place-content-center rounded border border-gray-200 transition-colors hover:bg-gray-50 disabled:opacity-50"
                 >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="size-4"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
+                  ▶
                 </button>
               </li>
             </ul>

@@ -252,7 +252,6 @@ function LandingPageAdmin() {
               </div>
             </div>
 
-            {/* BAGIAN UNTUK MENAMPILKAN TABEL BUKU */}
             {visibleSection === "buku" && (
               <section className="bg-white p-6 rounded-2xl shadow-xl space-y-6">
                 <h2 className="text-2xl font-semibold">

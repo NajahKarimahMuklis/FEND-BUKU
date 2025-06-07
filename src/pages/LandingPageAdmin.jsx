@@ -1,25 +1,26 @@
 import { motion } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import {
   FaBook,
   FaCheck,
   FaFolder,
   FaHome,
-  FaSearch,
-  FaUserFriends,
-  FaExclamationTriangle, // Ikon untuk pop-up token
-  FaBookOpen, // Ikon baru untuk Kelola Buku
-  FaTags, // Ikon baru untuk Kelola Kategori
-  FaFilter, // Ikon untuk filter
-  FaListUl, // Ikon untuk Daftar Buku
-  FaThLarge, // Ikon untuk Daftar Kategori
-  FaCheckCircle, // Ikon untuk status Tersedia
-  FaRegClock, // Ikon untuk status Dipinjam
   FaHistory,
-  FaTrash, // Ikon untuk delete
-  FaTimes, // Ikon untuk close modal
+  FaTrash,
+  FaExclamationTriangle,
+  FaListUl,
+  FaFilter,
+  FaSearch,
+  FaRegClock,
+  FaCheckCircle,
+  FaBookOpen,
+  FaTags,
+  FaUserFriends,
+  FaThLarge,
 } from "react-icons/fa";
 import { useNavigate } from "react-router";
+
+// Import komponen Form
 import AddBookForm from "../components/AddBookForm";
 import AddBukuKatForm from "../components/AddBukuKatForm";
 import AddKategoriForm from "../components/AddKategoriForm";
@@ -27,66 +28,37 @@ import KonfirmasiPermintaan from "../components/KonfirmasiPermintaan";
 import Riwayat from "../components/Riwayat";
 
 function LandingPageAdmin() {
-  const [adminName, setAdminName] = useState("");
-  const [statusFilter, setStatusFilter] = useState("");
-  const [query, setQuery] = useState("");
+  // --- 1. Deklarasi State dan Konstanta ---
   const [active, setActive] = useState("dashboard");
+  const [adminName, setAdminName] = useState("");
   const [eksemplarBuku, setEksemplarBuku] = useState([]);
   const [kategori, setKategori] = useState([]);
-  const [filteredEksemplar, setFilteredEksemplar] = useState([]);
-  const [sudahAmbilBuku, setSudahAmbilBuku] = useState(false);
-  const [sudahAmbilKategori, setSudahAmbilKategori] = useState(false);
-  const [tampilBuku, setTampilBuku] = useState(false);
-  const [tampilKategori, setTampilKategori] = useState(false);
-  const navigate = useNavigate();
+
+  const [visibleSection, setVisibleSection] = useState(null);
+  const [dataFetched, setDataFetched] = useState({
+    buku: false,
+    kategori: false,
+  });
+
+  const [query, setQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
   const [showTokenExpiryPopup, setShowTokenExpiryPopup] = useState(false);
 
-  useEffect(() => {
-    const adminNameFromStorage = localStorage.getItem("adminName");
-    setAdminName(adminNameFromStorage);
-  }, []);
+  const navigate = useNavigate();
+  const itemsPerPage = 20;
 
-  const tableVariants = {
-    hidden: { opacity: 0 },
-    visible: { opacity: 1, transition: { staggerChildren: 0.03 } },
-  };
-  const rowVariants = {
-    hidden: { opacity: 0, y: 15 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.25, ease: "easeOut" },
-    },
-  };
+  // --- 2. Logika dan Helper Functions ---
 
   const handleSessionExpired = () => {
     document.cookie = "token=; Max-Age=0; path=/;";
     localStorage.removeItem("adminName");
-    setAdminName("");
     setShowTokenExpiryPopup(true);
-    setTimeout(() => {
-      setShowTokenExpiryPopup(false);
-      navigate("/login");
-    }, 3500);
-  };
-
-  const handleLogout = () => {
-    handleSessionExpired();
+    setTimeout(() => navigate("/login"), 3500);
   };
 
   const fetchDataWithAuth = async (url, options = {}) => {
-    const defaultOptions = {
-      method: "GET",
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-        ...options.headers,
-      },
-      ...options,
-    };
-
-    const response = await fetch(url, defaultOptions);
-
+    const response = await fetch(url, { credentials: "include", ...options });
     if (response.status === 401) {
       handleSessionExpired();
       throw new Error("Sesi kedaluwarsa");
@@ -94,548 +66,424 @@ function LandingPageAdmin() {
     return response;
   };
 
-  useEffect(() => {
-    let hasilFilter = [...eksemplarBuku];
-    if (query) {
-      const q = query.toLowerCase();
-      hasilFilter = hasilFilter.filter(
-        (item) =>
-          item.buku?.judul?.toLowerCase().includes(q) ||
-          item.buku?.pengarang?.toLowerCase().includes(q) ||
-          item.buku?.penerbit?.toLowerCase().includes(q) ||
-          item.buku?.tahunTerbit?.toString().includes(q) ||
-          item.kodeEksemplar?.toLowerCase().includes(q)
-      );
-    }
-    if (statusFilter) {
-      hasilFilter = hasilFilter.filter(
-        (item) => item.status?.toLowerCase() === statusFilter.toLowerCase()
-      );
-    }
-    setFilteredEksemplar(hasilFilter);
-  }, [query, statusFilter, eksemplarBuku]);
-
-  const handleKlikEksemplar = async () => {
-    const akanTampil = !tampilBuku;
-    setTampilBuku(akanTampil);
-    if (akanTampil) {
-      setTampilKategori(false);
-      if (!sudahAmbilBuku) {
-        try {
-          const res = await fetchDataWithAuth(
-            "https://be-appbuku-production-6cfd.up.railway.app/eksemplarBuku"
-          );
-          // fetchDataWithAuth throws on 401, so res should be valid if we reach here
-          const data = await res.json();
-          if (res.ok) {
-            setEksemplarBuku(data.data || []);
-            setSudahAmbilBuku(true);
-          } else {
-            console.error("Gagal mendapatkan eksemplar buku:", data.message);
-          }
-        } catch (error) {
-          if (error.message !== "Sesi kedaluwarsa") {
-            console.error("Error fetching books:", error);
-          }
-        }
-      }
-    }
-  };
-
-  const handleKlikKategori = async () => {
-    const akanTampil = !tampilKategori;
-    setTampilKategori(akanTampil);
-    if (akanTampil) {
-      setTampilBuku(false);
-      if (!sudahAmbilKategori) {
-        try {
-          const res = await fetchDataWithAuth(
-            "https://be-appbuku-production-6cfd.up.railway.app/kategori"
-          );
-          // fetchDataWithAuth throws on 401, so res should be valid
-          const data = await res.json();
-          if (res.ok) {
-            setKategori(data.data || []);
-            setSudahAmbilKategori(true);
-          } else {
-            console.error("Gagal mendapatkan kategori:", data.message);
-          }
-        } catch (error) {
-          if (error.message !== "Sesi kedaluwarsa") {
-            console.error("Error fetching categories:", error);
-          }
-        }
-      }
-    }
-  };
-
-  // Fungsi delete
-  const handleDeleteBuku = async (bukuId, judulBuku) => {
-    if (confirm(`Yakin mau hapus buku "${judulBuku}"?`)) {
-      try {
-        const response = await fetchDataWithAuth(
-          `https://be-appbuku-production-6cfd.up.railway.app/buku/${bukuId}`,
-          {
-            method: "DELETE",
-          }
-        );
-        if (response.ok) {
-          alert("Buku berhasil dihapus!");
-          setSudahAmbilBuku(false);
-          handleKlikEksemplar();
-        } else {
-          alert("Gagal menghapus buku");
-        }
-      } catch (error) {
-        console.error("Error:", error);
-        alert("Terjadi kesalahan");
-      }
-    }
-  };
-
-  const handleDeleteEksemplar = async (eksemplarId, kodeEksemplar) => {
-    if (confirm(`Yakin mau hapus eksemplar "${kodeEksemplar}"?`)) {
-      try {
-        const res = await fetchDataWithAuth(
-          `https://be-appbuku-production-6cfd.up.railway.app/eksemplarBuku/${eksemplarId}`,
-          {
-            method: "DELETE",
-          }
-        );
-        if (res.ok) {
-          alert("Eksemplar berhasil dihapus!");
-          setSudahAmbilBuku(false);
-          handleKlikEksemplar();
-        } else {
-          alert("Gagal menghapus eksemplar");
-        }
-      } catch (error) {
-        console.error("Error:", error);
-        alert("Terjadi kesalahan");
-      }
-    }
-  };
-
   const globalApiConfig = { fetchDataWithAuth, handleSessionExpired };
 
-  const DashboardCard = ({
-    icon,
-    title,
-    description,
-    onClick,
-    gradientFrom,
-    gradientTo,
-    textColor,
-  }) => (
-    <motion.div
-      whileHover={{ scale: 1.03, y: -5 }}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, ease: "circOut" }}
-      onClick={onClick}
-      className={`bg-gradient-to-br ${gradientFrom} ${gradientTo} p-6 rounded-2xl shadow-xl hover:shadow-2xl transition-all cursor-pointer text-white min-h-[180px] flex flex-col justify-between`}
-    >
-      <div>
-        <div className={`mb-3 text-4xl ${textColor} opacity-80`}>{icon}</div>
-        <h2 className={`text-xl font-bold ${textColor}`}>{title}</h2>
-      </div>
-      <p className={`text-sm ${textColor} opacity-90 mt-1`}>{description}</p>
-    </motion.div>
+  const loadData = async (type) => {
+    if (dataFetched[type]) return;
+
+    const endpoint = type === "buku" ? "eksemplarBuku" : "kategori";
+    const setData = type === "buku" ? setEksemplarBuku : setKategori;
+
+    try {
+      const res = await fetchDataWithAuth(
+        `https://be-appbuku-production-6cfd.up.railway.app/${endpoint}`
+      );
+      const result = await res.json();
+      if (res.ok) {
+        setData(result.data || []);
+        setDataFetched((prev) => ({ ...prev, [type]: true }));
+      }
+    } catch (error) {
+      if (error.message !== "Sesi kedaluwarsa")
+        console.error(`Gagal memuat data ${type}:`, error);
+    }
+  };
+
+  const handleShowSection = (type) => {
+    if (visibleSection === type) {
+      setVisibleSection(null);
+    } else {
+      setVisibleSection(type);
+      loadData(type);
+    }
+  };
+
+  const refreshData = (type) => {
+    setDataFetched((prev) => ({ ...prev, [type]: false }));
+    loadData(type);
+  };
+
+  const handleDelete = async (type, id, name) => {
+    if (!confirm(`Yakin mau hapus ${type} "${name}"?`)) return;
+
+    const endpoint = type === "buku" ? `buku/${id}` : `eksemplarBuku/${id}`;
+
+    try {
+      const res = await fetchDataWithAuth(
+        `https://be-appbuku-production-6cfd.up.railway.app/${endpoint}`,
+        { method: "DELETE" }
+      );
+      if (res.ok) {
+        alert(
+          `${type.charAt(0).toUpperCase() + type.slice(1)} berhasil dihapus!`
+        );
+        refreshData("buku");
+      } else {
+        const errData = await res.json();
+        alert(`Gagal menghapus ${type}: ${errData.message || ""}`);
+      }
+    } catch (error) {
+      console.error("Gagal menghapus:", error);
+    }
+  };
+
+  // --- 3. Kalkulasi Data ---
+
+  const filteredEksemplar = useMemo(() => {
+    return eksemplarBuku.filter((item) => {
+      const q = query.toLowerCase();
+      const matchesQuery =
+        !q ||
+        item.buku?.judul?.toLowerCase().includes(q) ||
+        item.buku?.pengarang?.toLowerCase().includes(q) ||
+        item.kodeEksemplar?.toLowerCase().includes(q);
+      const matchesStatus =
+        !statusFilter ||
+        item.status?.toLowerCase() === statusFilter.toLowerCase();
+      return matchesQuery && matchesStatus;
+    });
+  }, [eksemplarBuku, query, statusFilter]);
+
+  const totalPages = Math.ceil(filteredEksemplar.length / itemsPerPage);
+  const paginatedEksemplar = filteredEksemplar.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
   );
 
+  // --- 4. Effects ---
+
+  useEffect(() => {
+    setAdminName(localStorage.getItem("adminName"));
+  }, []);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [query, statusFilter]);
+
+  // --- 5. Render JSX ---
+
   return (
-    <div className="flex h-screen overflow-hidden bg-slate-100 font-sans">
+    <div
+      className={`flex h-screen bg-slate-100 font-sans ${
+        showTokenExpiryPopup ? "blur-sm pointer-events-none" : ""
+      }`}
+    >
       {showTokenExpiryPopup && (
-        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-[1000]">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.7 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.3 }}
-            className="bg-white p-8 rounded-xl shadow-2xl text-center max-w-md mx-4"
-          >
+        <div className="fixed inset-0 bg-black/75 z-50 flex items-center justify-center p-4">
+          <div className="bg-white p-8 rounded-xl shadow-2xl text-center">
             <FaExclamationTriangle className="text-7xl text-yellow-500 mx-auto mb-6" />
-            <h3 className="text-2xl font-bold text-slate-800 mb-3">
-              Sesi Kedaluwarsa
-            </h3>
-            <p className="text-slate-600 mb-6">
-              Sesi Anda telah berakhir. Anda akan dialihkan ke halaman login
-              secara otomatis.
-            </p>
-            <div className="w-full bg-gray-200 rounded-full h-2.5 mb-4 overflow-hidden">
-              <motion.div
-                className="bg-yellow-500 h-2.5 rounded-full"
-                initial={{ width: "0%" }}
-                animate={{ width: "100%" }}
-                transition={{ duration: 3.2, ease: "linear" }}
-              />
-            </div>
-            <p className="text-sm text-slate-500">Mengalihkan...</p>
-          </motion.div>
+            <h3 className="text-2xl font-bold">Sesi Kedaluwarsa</h3>
+          </div>
         </div>
       )}
 
-      <div
-        className={`w-64 bg-emerald-800 text-slate-100 flex flex-col justify-between shadow-lg transition-all duration-300 ${
-          showTokenExpiryPopup ? "blur-sm pointer-events-none" : ""
-        }`}
-      >
+      {/* Sidebar */}
+      <div className="w-64 bg-emerald-800 text-slate-100 flex flex-col justify-between shadow-lg">
         <div>
-          <h2 className="text-2xl font-semibold p-6 tracking-tight text-white">
+          <h2 className="text-2xl font-semibold p-6 text-white">
             BookNest Admin
           </h2>
           <nav className="flex flex-col gap-1 p-3">
             {[
+              { id: "dashboard", label: "Dashboard", icon: <FaHome /> },
+              { id: "buku", label: "Tambah Buku", icon: <FaBook /> },
+              { id: "kategori", label: "Tambah Kategori", icon: <FaFolder /> },
               {
-                label: "Dashboard",
-                icon: <FaHome />,
-                id: "dashboard",
-                color: "text-sky-300",
-              },
-              {
-                label: "Kelola Buku",
-                icon: <FaBook />,
-                id: "buku",
-                color: "text-rose-300",
-              },
-              {
-                label: "Kelola Kategori",
-                icon: <FaFolder />,
-                id: "kategori",
-                color: "text-amber-300",
-              },
-              {
+                id: "BukuKategori",
                 label: "Buku Kategori",
                 icon: <FaUserFriends />,
-                id: "BukuKategori",
-                color: "text-fuchsia-300",
               },
-              {
-                label: "Konfirmasi",
-                icon: <FaCheck />,
-                id: "Konfirmasi",
-                color: "text-lime-300",
-              },
-              {
-                label: "Riwayat",
-                icon: <FaHistory className="text-orange-400" />,
-                id: "Riwayat",
-                color: "text-lime-300",
-              },
-            ].map((item) => (
+              { id: "Konfirmasi", label: "Konfirmasi", icon: <FaCheck /> },
+              { id: "Riwayat", label: "Riwayat", icon: <FaHistory /> },
+            ].map(({ id, label, icon }) => (
               <button
-                key={item.id}
-                onClick={() => setActive(item.id)}
-                className={`flex items-center text-left p-3 hover:bg-emerald-700 rounded-lg transition-colors duration-150 ${
-                  active === item.id ? "bg-emerald-600 shadow-inner" : ""
+                key={id}
+                onClick={() => setActive(id)}
+                className={`flex items-center text-left p-3 hover:bg-emerald-700 rounded-lg transition-colors ${
+                  active === id ? "bg-emerald-600 shadow-inner" : ""
                 }`}
               >
-                <span
-                  className={`w-6 h-6 flex items-center justify-center mr-3 ${item.color}`}
-                >
-                  {item.icon}
-                </span>
-                <span className="font-medium text-sm">{item.label}</span>
+                <span className="w-6 mr-3">{icon}</span> {label}
               </button>
             ))}
           </nav>
         </div>
         <div className="p-4 border-t border-emerald-700">
           <button
-            onClick={handleLogout}
-            className="w-full bg-red-600 py-2.5 px-4 rounded-lg hover:bg-red-700 transition-colors duration-150 font-semibold text-sm text-white"
+            onClick={handleSessionExpired}
+            className="w-full bg-red-600 py-2.5 rounded-lg hover:bg-red-700 font-semibold"
           >
             Keluar
           </button>
         </div>
       </div>
 
-      <div
-        className={`flex-1 overflow-y-auto transition-all duration-300 ${
-          showTokenExpiryPopup ? "blur-sm pointer-events-none" : ""
-        } ${
-          active === "dashboard"
-            ? "p-6 md:p-8 lg:p-10"
-            : "pt-3 md:pt-4 lg:pt-6 px-6 pb-6 md:px-8 md:pb-8 lg:px-10 lg:pb-10"
-        }`}
-      >
-        {active === "dashboard" && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="mb-8"
-          >
-            <h1 className="text-3xl font-bold text-slate-800">
-              Selamat Datang, {adminName?.split("@")[0] || "Admin"}! 👋
-            </h1>
-            <p className="text-md text-slate-600 mt-1">
-              Semoga harimu menyenangkan! Ayo kelola perpustakaan hari ini.
-            </p>
-          </motion.div>
-        )}
-
-        {active === "dashboard" && (
+      {/* Main Content */}
+      <main className="flex-1 overflow-y-auto p-8">
+        {active === "dashboard" ? (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 0.5 }}
-            className="space-y-10"
+            className="space-y-8"
           >
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
-              <DashboardCard
-                icon={<FaBookOpen />}
-                title="Kelola Koleksi Buku"
-                description="Lihat, tambah, dan atur semua koleksi buku perpustakaan."
-                onClick={handleKlikEksemplar}
-                gradientFrom="from-sky-500"
-                gradientTo="to-indigo-600"
-                textColor="text-white"
-              />
-              <DashboardCard
-                icon={<FaTags />}
-                title="Kelola Kategori Buku"
-                description="Atur klasifikasi dan pengelompokan buku berdasarkan tema."
-                onClick={handleKlikKategori}
-                gradientFrom="from-emerald-500"
-                gradientTo="to-green-600"
-                textColor="text-white"
-              />
+            <div>
+              <h1 className="text-3xl font-bold text-slate-800">
+                Selamat Datang, {adminName?.split("@")[0] || "Admin"}! 👋
+              </h1>
+              <p className="text-md text-slate-600 mt-1">
+                Semoga harimu menyenangkan!
+              </p>
             </div>
 
-            {tampilBuku && (
-              <motion.section
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: 0.1 }}
-                className="bg-white p-6 rounded-2xl shadow-xl space-y-6"
+            <div className="grid md:grid-cols-2 gap-6">
+              <div
+                onClick={() => handleShowSection("buku")}
+                className="bg-gradient-to-br from-sky-500 to-indigo-600 p-6 rounded-2xl shadow-xl cursor-pointer text-white"
               >
-                <h2 className="text-2xl font-semibold text-slate-800 flex items-center">
-                  <FaListUl className="mr-3 text-sky-600" />
+                <FaBookOpen className="text-4xl mb-3" />
+                <h2 className="text-xl font-bold">Kelola Koleksi Buku</h2>
+              </div>
+              <div
+                onClick={() => handleShowSection("kategori")}
+                className="bg-gradient-to-br from-emerald-500 to-green-600 p-6 rounded-2xl shadow-xl cursor-pointer text-white"
+              >
+                <FaTags className="text-4xl mb-3" />
+                <h2 className="text-xl font-bold">Kelola Kategori Buku</h2>
+              </div>
+            </div>
+
+            {/* BAGIAN UNTUK MENAMPILKAN TABEL BUKU */}
+            {visibleSection === "buku" && (
+              <section className="bg-white p-6 rounded-2xl shadow-xl space-y-6">
+                <h2 className="text-2xl font-semibold">
+                  <FaListUl className="inline mr-3 text-sky-600" />
                   Daftar Koleksi Buku
                 </h2>
-                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 flex flex-col md:flex-row items-center gap-4 shadow-sm">
-                  <div className="relative w-full md:flex-1">
-                    <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-                    <input
-                      type="text"
-                      placeholder="Cari buku (judul, pengarang, dll...)"
-                      value={query}
-                      onChange={(e) => setQuery(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-sm shadow-inner"
-                    />
-                  </div>
-                  <div className="relative w-full md:w-auto">
-                    <FaFilter className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-                    <select
-                      value={statusFilter}
-                      onChange={(e) => setStatusFilter(e.target.value)}
-                      className="w-full md:w-52 pl-10 pr-4 py-2.5 appearance-none rounded-lg border border-slate-300 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-sm shadow-inner"
-                    >
-                      <option value="">Semua Status</option>
-                      <option value="tersedia">Tersedia</option>
-                      <option value="dipinjam">Dipinjam</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="overflow-x-auto rounded-lg border border-slate-200 shadow-md">
-                  <motion.table
-                    variants={tableVariants}
-                    initial="hidden"
-                    animate="visible"
-                    className="min-w-full text-sm"
+                <div className="p-4 bg-slate-50 rounded-xl flex flex-col md:flex-row gap-4">
+                  <input
+                    type="text"
+                    placeholder="Cari Judul, Kode..."
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    className="w-full p-5 bg-gray-200 rounded-xl"
+                  />
+                  <select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    className="md:w-52 p-2 border rounded bg-white"
                   >
-                    <thead className="bg-slate-100">
+                    <option value="">Semua Status</option>
+                    <option value="tersedia">Tersedia</option>
+                    <option value="dipinjam">Dipinjam</option>
+                  </select>
+                </div>
+                <div className="overflow-x-auto rounded-lg border border-slate-200 shadow-md">
+                  <table className="min-w-full text-sm">
+                    <thead className="bg-gradient-to-r from-slate-100 to-slate-50 border-b border-slate-200">
+                      {/* --- Perubahan di sini --- */}
                       <tr>
-                        {[
-                          "Kode",
-                          "Judul Buku",
-                          "Kategori",
-                          "Pengarang",
-                          "Penerbit",
-                          "Tahun",
-                          "Status",
-                          "Aksi",
-                        ].map((head) => (
-                          <th
-                            key={head}
-                            className="px-5 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider"
-                          >
-                            {head}
-                          </th>
-                        ))}
+                        {["Kode", "Judul", "Kategori", "Status", "Aksi"].map(
+                          (h) => (
+                            <th
+                              key={h}
+                              className="p-4 text-left text-lg font-bold uppercase tracking-wider text-slate-600 border-r border-slate-200 last:border-r-0"
+                            >
+                              <div className="flex items-center gap-2">
+                                {h === "Kode" && (
+                                  <span className="text-blue-500">🏷️</span>
+                                )}
+                                {h === "Judul" && (
+                                  <span className="text-emerald-500">📚</span>
+                                )}
+                                {h === "Kategori" && (
+                                  <span className="text-purple-500">📂</span>
+                                )}
+                                {h === "Status" && (
+                                  <span className="text-amber-500">⚡</span>
+                                )}
+                                {h === "Aksi" && (
+                                  <span className="text-red-500">⚙️</span>
+                                )}
+                                {h}
+                              </div>
+                            </th>
+                          )
+                        )}
                       </tr>
                     </thead>
-                    <tbody className="bg-white divide-y divide-slate-200">
-                      {filteredEksemplar.length > 0 ? (
-                        filteredEksemplar.map((bukus) => (
-                          <motion.tr
-                            key={bukus.id || bukus.kodeEksemplar}
-                            variants={rowVariants}
-                            className="hover:bg-slate-50 transition-colors"
+                    <tbody className="bg-white divide-y divide-slate-100">
+                      {paginatedEksemplar.length > 0 ? (
+                        paginatedEksemplar.map((item, index) => (
+                          <tr
+                            key={item.id}
+                            className="hover:bg-slate-50 transition-colors duration-200 group"
                           >
-                            <td className="px-5 py-4 whitespace-nowrap font-mono text-xs text-slate-600">
-                              {bukus.kodeEksemplar}
+                            <td className="p-4 font-mono text-xs border-r border-slate-100">
+                              <div className="flex items-center gap-2">
+                                <div className="w-2 h-2 bg-blue-400 rounded-full opacity-60 group-hover:opacity-100 transition-opacity"></div>
+                                <code className="px-2 py-1 bg-blue-50 text-blue-700 rounded font-semibold border border-blue-200">
+                                  {item.kodeEksemplar}
+                                </code>
+                              </div>
                             </td>
                             <td
-                              className="px-5 py-4 whitespace-nowrap font-medium text-slate-800 max-w-xs truncate"
-                              title={bukus.buku?.judul}
+                              className="p-4 font-medium max-w-xs truncate border-r border-slate-100"
+                              title={item.buku?.judul}
                             >
-                              {bukus.buku?.judul}
+                              <div className="group-hover:text-emerald-600 transition-colors cursor-help">
+                                {item.buku?.judul}
+                              </div>
                             </td>
+                            {/* --- Perubahan di sini --- */}
                             <td
-                              className="px-5 py-4 whitespace-nowrap text-slate-600 text-xs max-w-xs truncate"
+                              className="p-4 text-xs max-w-xs truncate border-r border-slate-100"
                               title={
-                                bukus.buku?.kategori
+                                item.buku?.kategori
                                   ?.map((k) => k.kategori?.nama)
                                   .join(", ") || "-"
                               }
                             >
-                              {bukus.buku?.kategori
+                              {item.buku?.kategori
                                 ?.map((k) => k.kategori?.nama)
                                 .join(", ") || "-"}
                             </td>
-                            <td
-                              className="px-5 py-4 whitespace-nowrap text-slate-600 max-w-xs truncate"
-                              title={bukus.buku?.pengarang}
-                            >
-                              {bukus.buku?.pengarang}
+                            <td className="p-4 border-r border-slate-100">
+                              <div className="flex items-center gap-2">
+                                <div
+                                  className={`w-2 h-2 rounded-full ${
+                                    item.status?.toLowerCase() === "tersedia"
+                                      ? "bg-green-400 animate-pulse"
+                                      : "bg-yellow-400"
+                                  }`}
+                                ></div>
+                                <span
+                                  className={`px-3 py-1 text-xs font-semibold rounded-full capitalize border transition-all duration-200 ${
+                                    item.status?.toLowerCase() === "tersedia"
+                                      ? "bg-green-50 text-green-700 border-green-200 hover:bg-green-100"
+                                      : "bg-yellow-50 text-yellow-700 border-yellow-200 hover:bg-yellow-100"
+                                  }`}
+                                >
+                                  {item.status?.toLowerCase() === "tersedia"
+                                    ? "✓ Tersedia"
+                                    : "⏳ Dipinjam"}
+                                </span>
+                              </div>
                             </td>
-                            <td
-                              className="px-5 py-4 whitespace-nowrap text-slate-600 max-w-xs truncate"
-                              title={bukus.buku?.penerbit}
-                            >
-                              {bukus.buku?.penerbit}
-                            </td>
-                            <td className="px-5 py-4 whitespace-nowrap text-slate-600">
-                              {bukus.buku?.tahunTerbit}
-                            </td>
-                            <td className="px-5 py-4 whitespace-nowrap">
-                              <span
-                                className={`px-2.5 py-1 inline-flex items-center text-xs font-semibold rounded-full capitalize ${
-                                  bukus.status?.toLowerCase() === "tersedia"
-                                    ? "bg-green-100 text-green-700"
-                                    : "bg-yellow-100 text-yellow-700"
-                                }`}
-                              >
-                                {bukus.status?.toLowerCase() === "tersedia" ? (
-                                  <FaCheckCircle className="mr-1.5" />
-                                ) : (
-                                  <FaRegClock className="mr-1.5" />
-                                )}
-                                {bukus.status}
-                              </span>
-                            </td>
-                            <td className="px-5 py-4 whitespace-nowrap">
-                              <div className="flex gap-2">
+                            <td className="p-4">
+                              <div className="flex justify-center">
                                 <button
                                   onClick={() =>
-                                    handleDeleteEksemplar(
-                                      bukus.id,
-                                      bukus.kodeEksemplar
+                                    handleDelete(
+                                      "eksemplar",
+                                      item.id,
+                                      item.kodeEksemplar
                                     )
                                   }
-                                  className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                  title="Hapus Eksemplar"
+                                  className="group/btn relative p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200 border border-transparent hover:border-red-200"
+                                  title={`Hapus eksemplar ${item.kodeEksemplar}`}
                                 >
-                                  <FaTrash />
-                                </button>
-                                <button
-                                  onClick={() =>
-                                    handleDeleteBuku(
-                                      bukus.buku?.id,
-                                      bukus.buku?.judul
-                                    )
-                                  }
-                                  className="p-2 text-red-800 hover:bg-red-100 rounded-lg transition-colors"
-                                  title="Hapus Buku"
-                                >
-                                  <FaBook />
+                                  <FaTrash className="w-4 h-4 group-hover/btn:scale-110 transition-transform" />
+                                  <div className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover/btn:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                                    Hapus
+                                  </div>
                                 </button>
                               </div>
                             </td>
-                          </motion.tr>
+                          </tr>
                         ))
                       ) : (
+                        // --- Perubahan di sini ---
                         <tr>
                           <td
-                            colSpan="8"
-                            className="text-center py-8 text-slate-500 italic"
+                            colSpan="5"
+                            className="p-8 text-center text-slate-500"
                           >
-                            Tidak ada data buku yang cocok dengan filter Anda.
+                            <div className="flex flex-col items-center gap-3">
+                              <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center">
+                                <span className="text-2xl">📭</span>
+                              </div>
+                              <div>
+                                <p className="font-medium text-slate-600">
+                                  Data tidak ditemukan
+                                </p>
+                                <p className="text-sm text-slate-400 mt-1">
+                                  Belum ada eksemplar yang tersedia
+                                </p>
+                              </div>
+                            </div>
                           </td>
                         </tr>
                       )}
                     </tbody>
-                  </motion.table>
+                  </table>
                 </div>
-              </motion.section>
+                {totalPages > 1 && (
+                  <div className="flex justify-center items-center gap-3">
+                    <button
+                      onClick={() => setCurrentPage((p) => p - 1)}
+                      disabled={currentPage === 1}
+                      className="px-3 py-1 border rounded disabled:opacity-50"
+                    >
+                      Prev
+                    </button>
+                    <span>
+                      Halaman {currentPage} dari {totalPages}
+                    </span>
+                    <button
+                      onClick={() => setCurrentPage((p) => p + 1)}
+                      disabled={currentPage === totalPages}
+                      className="px-3 py-1 border rounded disabled:opacity-50"
+                    >
+                      Next
+                    </button>
+                  </div>
+                )}
+              </section>
             )}
 
-            {tampilKategori && (
-              <motion.section
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: 0.1 }}
-                className="bg-white p-6 rounded-2xl shadow-xl space-y-6"
-              >
-                <h2 className="text-2xl font-semibold text-slate-800 flex items-center">
-                  <FaThLarge className="mr-3 text-emerald-600" />
-                  Daftar Kategori Buku
+            {/* BAGIAN UNTUK MENAMPILKAN KATEGORI */}
+            {visibleSection === "kategori" && (
+              <section className="bg-white p-6 rounded-2xl shadow-xl space-y-6">
+                <h2 className="text-2xl font-semibold">
+                  <FaThLarge className="inline mr-3 text-emerald-600" />
+                  Daftar Kategori
                 </h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                   {kategori.length > 0 ? (
                     kategori.map((item) => (
-                      <motion.div
+                      <div
                         key={item.id}
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ duration: 0.3 }}
-                        className="bg-slate-50 border border-slate-200 rounded-xl p-5 shadow-sm hover:shadow-lg hover:border-emerald-300 transform hover:-translate-y-1 transition-all"
+                        className="bg-slate-50 border border-slate-200 rounded-lg p-4 hover:shadow-md transition-shadow"
                       >
-                        <div className="flex items-center mb-2">
-                          <FaFolder className="text-emerald-500 mr-2.5 text-lg" />
-                          <h3
-                            className="text-md font-semibold text-slate-800 truncate"
-                            title={item.nama}
-                          >
-                            {item.nama}
-                          </h3>
-                        </div>
-                        <p className="text-xs text-slate-600 line-clamp-3 leading-relaxed">
-                          {item.deskripsi || "Tidak ada deskripsi."}
+                        <h3 className="font-bold text-slate-800">
+                          {item.nama}
+                        </h3>
+                        <p className="text-sm text-slate-600 mt-1">
+                          {item.deskripsi}
                         </p>
-                      </motion.div>
+                      </div>
                     ))
                   ) : (
-                    <p className="col-span-full text-center py-8 text-slate-500 italic">
-                      Belum ada kategori yang ditambahkan.
+                    <p className="col-span-full text-center text-slate-500">
+                      Belum ada kategori.
                     </p>
                   )}
                 </div>
-              </motion.section>
+              </section>
             )}
           </motion.div>
-        )}
-
-        {active !== "dashboard" && (
-          <div className="bg-white p-6 md:p-8 rounded-2xl shadow-xl">
+        ) : (
+          <div className="bg-white p-6 rounded-2xl shadow-xl">
             {active === "buku" && (
               <AddBookForm
                 globalApiConfig={globalApiConfig}
-                onSuccess={() => {
-                  console.log("Form buku sukses");
-                  setSudahAmbilBuku(false);
-                }}
+                onSuccess={() => refreshData("buku")}
               />
             )}
             {active === "kategori" && (
               <AddKategoriForm
                 globalApiConfig={globalApiConfig}
-                onSuccess={() => {
-                  console.log("Kategori Form sukses");
-                  setSudahAmbilKategori(false);
-                }}
+                onSuccess={() => refreshData("kategori")}
               />
             )}
             {active === "BukuKategori" && (
@@ -647,7 +495,7 @@ function LandingPageAdmin() {
             {active === "Riwayat" && <Riwayat />}
           </div>
         )}
-      </div>
+      </main>
     </div>
   );
 }

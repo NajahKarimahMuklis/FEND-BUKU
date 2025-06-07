@@ -296,7 +296,7 @@ function LandingPageUser() {
                   disabled={currentPage === 1}
                   className="grid size-8 place-content-center rounded border border-gray-200 transition-colors hover:bg-gray-50 disabled:opacity-50"
                 >
-                  ◀
+                  ◀ 
                 </button>
               </li>
               <li className="text-sm font-medium tracking-wider flex items-center">

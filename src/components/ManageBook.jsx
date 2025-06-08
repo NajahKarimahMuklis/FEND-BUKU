@@ -1,4 +1,3 @@
-// src/components/ManageBooks.jsx
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -25,11 +24,7 @@ const UpdateBookForm = ({ book, categories, globalApiConfig, onUpdateSuccess, on
     pengarang: book.buku?.pengarang || "",
     penerbit: book.buku?.penerbit || "",
     tahunTerbit: book.buku?.tahunTerbit || "",
-    // Catatan: Endpoint backend PUT /buku/:bukuId yang Anda berikan
-    // hanya memperbarui 'judul', 'pengarang', 'penerbit', 'tahunTerbit'.
-    // Tampaknya tidak menangani 'userId' atau 'statusBukuId' dalam logika pembaruan
-    // meskipun ada pemeriksaan untuk itu. Untuk saat ini, kita akan tetap pada apa yang diperbarui backend.
-    // Jika Anda perlu memperbarui kategori untuk buku, Anda memerlukan endpoint terpisah atau memodifikasi yang sudah ada.
+    
   });
   // State untuk kategori yang dipilih (saat ini hanya untuk tampilan, karena endpoint PUT tidak mengupdate kategori)
   const [selectedCategories, setSelectedCategories] = useState(

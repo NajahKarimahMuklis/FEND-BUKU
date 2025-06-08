@@ -20,9 +20,9 @@ function LoginPage() {
           method: "POST",
           credentials: "include",
           headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
           },
-          body: JSON.stringify({ email, password })
+          body: JSON.stringify({ email, password }),
         }
       );
 
@@ -51,7 +51,7 @@ function LoginPage() {
   };
 
   return (
-    <div className="relative overflow-hidden min-h-screen raleway-general">
+    <div className="relative overflow-hidden mih-screen raleway-general">
       <img
         src={bgImage}
         alt="Background"
@@ -78,7 +78,6 @@ function LoginPage() {
           </p>
         </motion.div>
 
-        {/* Logo dan Intro untuk Mobile */}
         <div className="w-full flex flex-col sm:hidden items-center pt-6 pb-4 text-emerald-900">
           <h1 className="text-3xl font-bold">BookNest</h1>
           <p className="text-sm text-center">
@@ -153,27 +152,30 @@ function LoginPage() {
               </a>
             </div>
 
-            <div className="flex justify-center mb-4">
+            <div className="mt-8 space-y-4 max-w-[16rem] mx-auto">
               <button
                 type="submit"
-                className="w-full sm:w-40 bg-emerald-800 text-white py-2 rounded-md hover:bg-emerald-600 transition text-lg"
+                className="
+                w-full block text-center py-2 px-6 rounded-lg 
+                text-lg font-semibold transition-all duration-300 
+                bg-emerald-800 text-white hover:bg-transparent hover:text-emerald-800 border-2 border-emerald-800 hover:border-emerald-800 
+                 focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2
+              "
               >
                 Masuk
               </button>
-            </div>
-
-            <p className="text-center text-sm text-gray-700 mb-2">
-              Belum Punya Akun?
-            </p>
-
-            <div className="flex justify-center mb-4">
-              <Link to="/register">
-                <button
-                  type="button"
-                  className="w-full sm:w-40 text-emerald-900 border border-emerald-800 py-2 rounded-md hover:bg-emerald-700 hover:text-white transition text-lg"
-                >
-                  Daftar
-                </button>
+              <h2 className="flex justify-center">Belum Punya Akun?</h2>
+              <Link
+                to="/register"
+                className="
+                w-full block text-center py-2 px-6 rounded-lg 
+                text-lg font-semibold transition-all duration-300 
+                bg-transparent text-emerald-800 border-2 border-emerald-800 
+                hover:bg-emerald-800 hover:text-white 
+                focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2
+              "
+              >
+                Daftar
               </Link>
             </div>
           </motion.form>

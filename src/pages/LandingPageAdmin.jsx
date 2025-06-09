@@ -305,7 +305,7 @@ function LandingPageAdmin() {
                 icon: <FaCheck />,
               },
               { id: "Riwayat", label: "Riwayat Pinjam", icon: <FaHistory /> },
-              { id: "manageUsers", label: "Kelola User", icon: <FaUsers /> },
+              { id: "manageUsers", label: "Lihat User", icon: <FaUsers /> },
             ].map(({ id, label, icon }) => (
               <button
                 key={id}

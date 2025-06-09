@@ -1,5 +1,5 @@
 import bgImage from "../assets/bg-login.png";
-import logo from "../assets/logo.png";
+import logo from "/logo.png";
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -86,7 +86,7 @@ function LoginPage() {
         </div>
 
         {/* Right - Form Login */}
-        <div className="w-full lg:w-1/2 flex flex-col justify-center items-center p-6 sm:px-10 md:px-16 lg:px-24">
+        <div className="w-full max-w-3xl flex flex-col justify-center items-center p-6 sm:px-10 md:px-16 lg:px-24 mx-auto">
           <img
             src={logo}
             className="mb-6 w-24 sm:w-32 h-auto hidden sm:block"

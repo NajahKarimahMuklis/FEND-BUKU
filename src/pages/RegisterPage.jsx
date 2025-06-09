@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import bgImage from "../assets/bg-login.png";
-import logo from "../assets/logo.png";
+import logo from "/logo.png";
 import { motion } from "framer-motion";
 
 export default function Register() {

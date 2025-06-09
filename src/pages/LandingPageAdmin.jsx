@@ -396,7 +396,7 @@ function LandingPageAdmin() {
                 className="mt-4 sm:mt-0 bg-emerald-600 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2 hover:bg-emerald-700 transition-colors shadow-lg hover:shadow-emerald-300"
               >
                 <FaPlus />
-                Tambah Eksemplar
+                Tambah Buku
               </button>
             </div>
 

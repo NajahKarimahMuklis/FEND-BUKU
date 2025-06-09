@@ -2,6 +2,7 @@ import { useState } from "react";
 import { FaArrowLeft, FaFolderPlus, FaPlus } from "react-icons/fa";
 
 function AddKategoriForm() {
+
   const [nama, setNama] = useState("");
   const [sukses, setSukses] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -46,7 +47,7 @@ function AddKategoriForm() {
     <div className="bg-white rounded-2xl shadow-xl p-8 md:p-12 grid md:grid-cols-2 items-center gap-16">
       {/* Kolom Form */}
       <div className="w-full">
-        <h2 className="text-3xl font-bold text-slate-800 mb-2 flex items-center">
+        <h2 className="text-2xl  font-bold text-slate-800 mb-2 flex items-center">
           <FaFolderPlus className="text-emerald-500 mr-4" />
           Tambah Kategori Baru
         </h2>

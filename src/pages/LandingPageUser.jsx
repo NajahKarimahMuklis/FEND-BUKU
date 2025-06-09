@@ -4,6 +4,7 @@ import {
   FaCheckCircle,
   FaFilter,
   FaListUl,
+  FaBars,
   FaRegClock,
   FaSearch,
   FaHourglassHalf,
@@ -14,27 +15,26 @@ import {
 function LandingPageUser() {
   // --- STATE ---
   const [eksemplarData, setEksemplarData] = useState([]);
-  const [riwayatData, setRiwayatData] = useState([]); // State baru untuk data riwayat
+  const [riwayatData, setRiwayatData] = useState([]);
   const [userName, setUserName] = useState("");
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [isSidebarOpen, setSidebarOpen] = useState(false);
+
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  // State untuk dialog peminjaman
   const [showModal, setShowModal] = useState(false);
   const [selectedBook, setSelectedBook] = useState(null);
   const [selectedEksemplarId, setSelectedEksemplarId] = useState(null);
 
-  // State untuk mengontrol tampilan
-  const [activeView, setActiveView] = useState("buku"); // 'buku' atau 'riwayat'
-  const [isRiwayatFetched, setIsRiwayatFetched] = useState(false); // Flag agar tidak fetch berulang
+  const [activeView, setActiveView] = useState("buku");
+  const [isRiwayatFetched, setIsRiwayatFetched] = useState(false);
 
   const navigate = useNavigate();
 
   // --- FETCH DATA ---
   useEffect(() => {
-    // Fetch data buku (hanya sekali saat komponen dimuat)
     fetch("https://be-appbuku-production-6cfd.up.railway.app/eksemplarBuku", {
       credentials: "include",
     })
@@ -48,7 +48,7 @@ function LandingPageUser() {
   }, []);
 
   const fetchRiwayat = async () => {
-    if (isRiwayatFetched) return; // Jangan fetch jika sudah pernah
+    if (isRiwayatFetched) return;
     try {
       const res = await fetch(
         "https://be-appbuku-production-6cfd.up.railway.app/peminjaman/riwayat",
@@ -73,9 +73,8 @@ function LandingPageUser() {
     }
   };
 
-  // --- LOGIKA BUKU (Tidak Berubah) ---
+  // --- LOGIKA BUKU ---
   const uniqueBooks = useMemo(() => {
-    /* ... (Logika sama seperti sebelumnya) ... */
     const bookMap = new Map();
     eksemplarData.forEach((eksemplar) => {
       if (eksemplar.buku && !bookMap.has(eksemplar.buku.id)) {
@@ -86,7 +85,6 @@ function LandingPageUser() {
   }, [eksemplarData]);
 
   const filteredBooks = uniqueBooks.filter((buku) => {
-    /* ... (Logika sama seperti sebelumnya) ... */
     const matchesQuery = buku.judul
       ?.toLowerCase()
       .includes(query.toLowerCase());
@@ -113,42 +111,54 @@ function LandingPageUser() {
     setCurrentPage(1);
   }, [query, statusFilter]);
 
-  // --- HANDLERS (Peminjaman & Pengembalian) ---
+  // --- HANDLERS ---
   const handleLogout = () => {
-    /* ... (Logika sama seperti sebelumnya) ... */
     document.cookie = "token=; Max-Age=0; path=/;";
     navigate("/login");
   };
 
   const openConfirmationModal = (buku) => {
-    /* ... (Logika sama seperti sebelumnya) ... */
     const tersediaList = eksemplarData.filter(
       (e) => e.bukuId === buku.id && e.status === "TERSEDIA"
     );
+
     if (tersediaList.length === 0) {
       alert("Maaf, tidak ada eksemplar yang tersedia untuk buku ini.");
       return;
     }
+
+    const idToSet = tersediaList[0].id;
+
     setSelectedBook(buku);
-    setSelectedEksemplarId(tersediaList[0].id);
+    setSelectedEksemplarId(Number(idToSet));
     setShowModal(true);
   };
 
   const handlePinjam = async () => {
-    /* ... (Logika sama seperti sebelumnya) ... */
     if (!selectedEksemplarId) return;
+
+    // Buat tanggal pengembalian 10 hari dari sekarang
+    const tanggalPinjam = new Date();
+    const tanggalKembali = new Date(tanggalPinjam.setDate(tanggalPinjam.getDate() + 10));
+
     try {
-      const response = await fetch(
+      const res = await fetch(
         "https://be-appbuku-production-6cfd.up.railway.app/peminjaman",
         {
           method: "POST",
           credentials: "include",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ eksemplarId: selectedEksemplarId }),
+          // Tambahkan tanggalKembali ke body request
+          body: JSON.stringify({
+            eksemplarId: selectedEksemplarId,
+            tanggalKembali: tanggalKembali.toISOString(), // Gunakan format ISO untuk konsistensi
+          }),
         }
       );
-      const data = await response.json();
-      if (!response.ok) {
+
+      const data = await res.json();
+
+      if (!res.ok) {
         alert(data.message || "Gagal mengirim permintaan.");
       } else {
         alert(
@@ -161,7 +171,7 @@ function LandingPageUser() {
         setShowModal(false);
       }
     } catch (err) {
-      console.error(err);
+      console.error("Error saat meminjam:", err);
       alert("Terjadi kesalahan saat meminjam.");
     }
   };
@@ -181,7 +191,6 @@ function LandingPageUser() {
       const data = await res.json();
       if (res.ok) {
         alert("Permintaan pengembalian berhasil dikirim!");
-        // Update status di UI secara langsung
         setRiwayatData((currentRiwayat) =>
           currentRiwayat.map((p) =>
             p.id === peminjamanId ? { ...p, status: "PENDING_KEMBALI" } : p
@@ -195,9 +204,17 @@ function LandingPageUser() {
     }
   };
 
-  // --- Render JSX ---
+  // --- RENDER JSX ---
   return (
-    <div className="flex h-screen bg-gray-100 raleway-general">
+    <div className="flex h-screen bg-gradient-to-r from-green-200 to-blue-200 raleway-general">
+      {/* Backdrop sidebar untuk mobile */}
+      {isSidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 xl:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* Dialog Peminjaman */}
       {showModal && (
         <div className="fixed inset-0 z-50 bg-black bg-opacity-40 flex items-center justify-center p-4">
@@ -214,7 +231,9 @@ function LandingPageUser() {
             <p className="text-slate-700">
               Anda akan mengirim permintaan untuk meminjam buku:
               <br />
-              <strong className="text-emerald-700">{selectedBook.judul}</strong>
+              <strong className="text-emerald-700">
+                {selectedBook?.judul}
+              </strong>
             </p>
             <div className="flex justify-end gap-3 pt-3">
               <button
@@ -233,11 +252,36 @@ function LandingPageUser() {
           </div>
         </div>
       )}
+      {/* Tombol hamburger - hanya muncul di bawah xl */}
+      <button
+        onClick={() => setSidebarOpen(true)}
+        className="xl:hidden fixed top-4 left-4 z-40 p-2 bg-emerald-800 text-white rounded-lg shadow-lg"
+      >
+        <FaBars />
+      </button>
 
-      {/* Sidebar dengan Navigasi Baru */}
-      <div className="w-64 bg-emerald-800 text-white flex flex-col justify-between">
+      {/* Sidebar */}
+      <div
+        className={`
+    fixed xl:static z-50 inset-y-0 left-0 transform xl:transform-none
+    w-64 bg-emerald-800 text-slate-100 flex flex-col justify-between shadow-lg
+    transition-transform duration-300 ease-in-out
+    ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} xl:translate-x-0
+  `}
+      >
+        {/* Bagian Atas: Tombol close + Title */}
         <div>
-          <h2 className="text-2xl font-bold p-6">BookNest User</h2>
+          <div className="flex justify-end xl:hidden p-4">
+            <button
+              onClick={() => setSidebarOpen(false)}
+              className="text-white text-2xl"
+            >
+              &times;
+            </button>
+          </div>
+
+          <h2 className="text-2xl font-bold px-6 pb-2 pt-15">BookNest User</h2>
+
           <nav className="flex flex-col gap-2 p-4">
             <button
               onClick={() => handleViewChange("buku")}
@@ -257,6 +301,8 @@ function LandingPageUser() {
             </button>
           </nav>
         </div>
+
+        {/* Bagian Logout */}
         <div className="p-4">
           <button
             onClick={handleLogout}
@@ -269,7 +315,7 @@ function LandingPageUser() {
 
       {/* Main Content */}
       <div className="flex-1 p-8 overflow-y-auto">
-        <h1 className="text-3xl font-bold text-slate-800">
+        <h1 className="text-3xl font-bold text-slate-800 pt-7 text-center xl:text-left md:text-left">
           Selamat Datang, {userName?.split("@")[0] || "User"}! 👋
         </h1>
 
@@ -281,7 +327,7 @@ function LandingPageUser() {
               Daftar Koleksi Buku
             </h2>
 
-            {/* --- Bagian Filter (Tidak berubah) --- */}
+            {/* Filter */}
             <div className="p-4 rounded-xl bg-slate-100 shadow-xl flex flex-col md:flex-row items-center gap-4">
               <div className="relative w-full md:flex-1">
                 <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-800" />
@@ -307,11 +353,11 @@ function LandingPageUser() {
               </div>
             </div>
 
+            {/* Tabel Buku */}
             <div className="overflow-x-auto rounded-lg shadow-md">
               <table className="min-w-full text-sm">
                 <thead className="bg-slate-100 divide-x divide-slate-200">
                   <tr>
-                    {/* --- DIUBAH: Menambahkan kolom "Aksi" --- */}
                     {[
                       "Judul Buku",
                       "Kategori",
@@ -319,7 +365,7 @@ function LandingPageUser() {
                       "Penerbit",
                       "Tahun",
                       "Status",
-                      "Aksi", // Kolom baru
+                      "Aksi",
                     ].map((h) => (
                       <th
                         key={h}
@@ -363,8 +409,6 @@ function LandingPageUser() {
                             {buku.penerbit}
                           </td>
                           <td className="px-5 py-4">{buku.tahunTerbit}</td>
-
-                          {/* --- BARU: Kolom Status Ketersediaan --- */}
                           <td className="px-5 py-4">
                             {tersedia > 0 ? (
                               <span className="px-3 py-1 inline-flex items-center text-xs font-semibold rounded-full bg-green-100 text-green-700">
@@ -378,9 +422,7 @@ function LandingPageUser() {
                               </span>
                             )}
                           </td>
-
-                          {/* --- BARU: Kolom Aksi (Tombol Pinjam atau Status Pending) --- */}
-                          <td className="px-5 py-4 ">
+                          <td className="px-5 py-4">
                             {isPendingByUser ? (
                               <span className="px-3 py-1 inline-flex items-center text-xs font-semibold rounded-full bg-blue-100 text-blue-700">
                                 <FaHourglassHalf className="mr-1.5" />
@@ -403,7 +445,7 @@ function LandingPageUser() {
                   ) : (
                     <tr>
                       <td
-                        colSpan="7" 
+                        colSpan="7"
                         className="text-center py-8 text-slate-500 italic"
                       >
                         Buku tidak ditemukan.
@@ -412,36 +454,28 @@ function LandingPageUser() {
                   )}
                 </tbody>
               </table>
-              {/* --- Pagination (Tidak berubah) --- */}
-              {totalPages > 1 && (
-                <div className="p-4 flex justify-center">
-                  <ul className="flex justify-center gap-3 text-gray-900 mt-6">
-                    <li>
-                      <button
-                        onClick={() =>
-                          setCurrentPage((p) => Math.max(p - 1, 1))
-                        }
-                        disabled={currentPage === 1}
-                        className="grid size-8 place-content-center rounded border rounded-xl hover:bg-gray-50 disabled:opacity-50"
-                      >
-                        Prev
-                      </button>
-                    </li>
-                    <li className="text-sm font-medium flex items-center">
-                      {currentPage} / {totalPages}
-                    </li>
-                    <li>
-                      <button
-                        onClick={() =>
-                          setCurrentPage((p) => Math.min(p + 1, totalPages))
-                        }
-                        disabled={currentPage === totalPages}
-                        className="grid size-8 place-content-center rounded border hover:bg-gray-50 disabled:opacity-50"
-                      >
-                        Next
-                      </button>
-                    </li>
-                  </ul>
+              {/* Pagination */}
+              {totalPages >= 1 && (
+                <div className="flex justify-center items-center gap-4 pt-6 pb-4 mt-4 border-t border-slate-200">
+                  <button
+                    onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+                    disabled={currentPage === 1}
+                    className="px-4 py-2 bg-white border border-slate-300 rounded-lg font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    Prev
+                  </button>
+                  <span className="font-medium text-slate-600">
+                    Halaman {currentPage} dari {totalPages}
+                  </span>
+                  <button
+                    onClick={() =>
+                      setCurrentPage((p) => Math.min(p + 1, totalPages))
+                    }
+                    disabled={currentPage === totalPages}
+                    className="px-4 py-2 bg-white border border-slate-300 rounded-lg font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    Next
+                  </button>
                 </div>
               )}
             </div>

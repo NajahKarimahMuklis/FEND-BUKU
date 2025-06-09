@@ -147,9 +147,7 @@ function LoginPage() {
                 <input type="checkbox" className="mr-2" />
                 Ingat Saya
               </label>
-              <a href="#" className="text-blue-500 hover:underline">
-                Lupa Kata Sandi?
-              </a>
+              
             </div>
 
             <div className="mt-8 space-y-4 max-w-[16rem] mx-auto">

@@ -283,7 +283,7 @@ function LandingPageAdmin() {
           </div>
 
           {/* Judul Sidebar */}
-          <h2 className="text-2xl font-semibold px-6 pb-2 text-white">
+          <h2 className="text-2xl font-semibold px-6 pb-2 pt-15 text-white">
             BookNest Admin
           </h2>
 
